@@ -1,7 +1,25 @@
 from fastapi import FastAPI
+from sqlalchemy import text
 
-app = FastAPI(title="Sufi Vegetable Sales System")
+from app.database import engine
+from app.routers import vegetables
+
+app = FastAPI(title="Al Aweer Produce System")
+
+app.include_router(vegetables.router)
+
 
 @app.get("/")
 def health_check():
     return {"status": "running"}
+
+
+@app.get("/db-check")
+def db_check():
+    """Confirms the app can reach Supabase."""
+    with engine.connect() as conn:
+        tables = conn.execute(text(
+            "SELECT count(*) FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"
+        )).scalar()
+    return {"database": "connected", "tables_found": tables}
