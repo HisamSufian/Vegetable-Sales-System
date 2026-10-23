@@ -2,11 +2,15 @@ from fastapi import FastAPI
 from sqlalchemy import text
 
 from app.database import engine
-from app.routers import vegetables
+from app.routers import consignments, expenses, inventory, masters, vegetables
 
 app = FastAPI(title="Al Aweer Produce System")
 
 app.include_router(vegetables.router)
+app.include_router(masters.router)
+app.include_router(consignments.router)
+app.include_router(expenses.router)
+app.include_router(inventory.router)
 
 
 @app.get("/")

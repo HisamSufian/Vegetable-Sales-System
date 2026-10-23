@@ -1,5 +1,5 @@
 -- =====================================================================
--- Sufi Vegetable Sales SYSTEM - DATABASE SCHEMA (PostgreSQL / Supabase)
+-- AL AWEER PRODUCE SYSTEM - DATABASE SCHEMA (PostgreSQL / Supabase)
 -- Run this whole file once in Supabase -> SQL Editor.
 -- Money = NUMERIC(12,2). Quantities = whole cartons (INTEGER).
 -- =====================================================================
@@ -25,6 +25,7 @@ CREATE TABLE farm_owners (
     id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name          TEXT NOT NULL,
     contact_phone TEXT,
+    default_margin_per_carton NUMERIC(12,2) CHECK (default_margin_per_carton >= 0),
     is_active     BOOLEAN NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -60,16 +61,6 @@ CREATE TABLE buyers (
     credit_limit NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (credit_limit >= 0),
     is_active    BOOLEAN NOT NULL DEFAULT TRUE,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- Agreed price paid to a farm per carton, per vegetable, per day
-CREATE TABLE farm_rates (
-    id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    farm_owner_id  BIGINT NOT NULL REFERENCES farm_owners(id),
-    vegetable_id   BIGINT NOT NULL REFERENCES vegetables(id),
-    rate_date      DATE NOT NULL,
-    rate_per_carton NUMERIC(12,2) NOT NULL CHECK (rate_per_carton >= 0),
-    UNIQUE (farm_owner_id, vegetable_id, rate_date)
 );
 
 -- ---------- 3. INBOUND CONSIGNMENTS (one truck = one farm owner) -----
@@ -139,7 +130,10 @@ CREATE TABLE sale_items (
     item_stock_id       BIGINT NOT NULL REFERENCES item_stock(id),
     cartons             INTEGER NOT NULL CHECK (cartons > 0),
     price_per_carton    NUMERIC(12,2) NOT NULL CHECK (price_per_carton >= 0),
-    line_total          NUMERIC(12,2) GENERATED ALWAYS AS (cartons * price_per_carton) STORED
+    farm_rate_per_carton NUMERIC(12,2) NOT NULL CHECK (farm_rate_per_carton >= 0), -- what the FARM gets
+    line_total          NUMERIC(12,2) GENERATED ALWAYS AS (cartons * price_per_carton) STORED,
+    margin_per_carton   NUMERIC(12,2) GENERATED ALWAYS AS (price_per_carton - farm_rate_per_carton) STORED,
+    farm_payout         NUMERIC(12,2) GENERATED ALWAYS AS (cartons * farm_rate_per_carton) STORED
 );
 
 -- ---------- 6. BUYER LEDGER ------------------------------------------

@@ -77,6 +77,7 @@ class FarmOwner(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     name: Mapped[str] = mapped_column(Text)
     contact_phone: Mapped[str | None] = mapped_column(Text)
+    default_margin_per_carton: Mapped[Decimal | None] = mapped_column(Money)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = created_at_col()
 
@@ -115,15 +116,6 @@ class Buyer(Base):
     credit_limit: Mapped[Decimal] = mapped_column(Money, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = created_at_col()
-
-
-class FarmRate(Base):
-    __tablename__ = "farm_rates"
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    farm_owner_id: Mapped[int] = mapped_column(ForeignKey("farm_owners.id"))
-    vegetable_id: Mapped[int] = mapped_column(ForeignKey("vegetables.id"))
-    rate_date: Mapped[date] = mapped_column(Date)
-    rate_per_carton: Mapped[Decimal] = mapped_column(Money)
 
 
 # ---------- Consignments ----------
@@ -205,7 +197,11 @@ class SaleItem(Base):
     item_stock_id: Mapped[int] = mapped_column(ForeignKey("item_stock.id"))
     cartons: Mapped[int] = mapped_column(Integer)
     price_per_carton: Mapped[Decimal] = mapped_column(Money)
+    farm_rate_per_carton: Mapped[Decimal] = mapped_column(Money)   # what the FARM gets per carton
+    # calculated by the database; never written by us
     line_total: Mapped[Decimal | None] = mapped_column(Money, Computed("cartons * price_per_carton", persisted=True))
+    margin_per_carton: Mapped[Decimal | None] = mapped_column(Money, Computed("price_per_carton - farm_rate_per_carton", persisted=True))
+    farm_payout: Mapped[Decimal | None] = mapped_column(Money, Computed("cartons * farm_rate_per_carton", persisted=True))
 
     sale: Mapped[SalesTransaction] = relationship(back_populates="items")
     consignment_item: Mapped[ConsignmentItem] = relationship()
