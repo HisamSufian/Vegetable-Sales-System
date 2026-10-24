@@ -9,7 +9,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.auth import NotLoggedIn
 from app.config import settings
 from app.db import pool
-from app.routers import health, pages
+from app.routers import health, pages, pickers, profiles, settings_page
 
 BASE_DIR = Path(__file__).parent
 
@@ -43,3 +43,6 @@ async def send_to_login(request: Request, exc: NotLoggedIn):
 
 app.include_router(health.router)
 app.include_router(pages.router)
+app.include_router(profiles.router)
+app.include_router(pickers.router)
+app.include_router(settings_page.router)

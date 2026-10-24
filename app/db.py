@@ -27,3 +27,11 @@ def query(sql: str, params=None) -> list[dict]:
     """Run a SELECT and return all rows as a list of dicts."""
     with pool.connection() as conn:
         return conn.execute(sql, params).fetchall()
+
+
+def execute(sql: str, params=None) -> list[dict]:
+    """Run an INSERT / UPDATE / DELETE. Saved (committed) when it succeeds,
+    undone if it fails. Returns the rows of a RETURNING clause, if any."""
+    with pool.connection() as conn:
+        cursor = conn.execute(sql, params)
+        return cursor.fetchall() if cursor.description else []

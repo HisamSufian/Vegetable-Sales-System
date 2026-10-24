@@ -5,12 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Sufi Vegetables{% endblock %}</title>
   <link rel="stylesheet" href="/static/css/app.css">
+  <script src="/static/js/htmx.min.js" defer></script>
+  <script src="/static/js/picker.js" defer></script>
 </head>
 <body>
   <header class="topbar">
-    <strong>Sufi Vegetables</strong>
-    {% block topbar_right %}{% endblock %}
+    <a class="brand" href="/">Sufi Vegetables</a>
+    {% if request.session.get("email") %}
+    <form method="post" action="/logout"><button type="submit" class="btn small secondary">Log out</button></form>
+    {% endif %}
   </header>
+  {% if request.session.get("email") %}
+  <nav class="nav">
+    <a href="/">Home</a>
+    <a href="/profiles">Profiles</a>
+    <a href="/settings">Settings</a>
+  </nav>
+  {% endif %}
   <main class="container">
     {% block content %}{% endblock %}
   </main>

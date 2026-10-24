@@ -1,0 +1,15 @@
+{# Search-as-you-type dropdown with quick-add.
+   Use:  {% from "_picker.html" import picker %}
+         {{ picker("farm-owners", "farm_owner_id", "Farm owner") }}
+   The chosen id is submitted under the given field name. #}
+{% macro picker(kind, name, label, selected_id="", selected_label="") %}
+<div class="picker">
+  <label>{{ label }}</label>
+  <input type="hidden" name="{{ name }}" value="{{ selected_id }}" class="picker-value">
+  <input type="text" name="q" class="picker-input" value="{{ selected_label }}"
+         placeholder="Type to search..." autocomplete="off"
+         hx-get="/pickers/{{ kind }}/search" hx-trigger="input changed delay:200ms, focus"
+         hx-target="next .picker-results" hx-swap="innerHTML">
+  <div class="picker-results"></div>
+</div>
+{% endmacro %}

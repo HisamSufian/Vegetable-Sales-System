@@ -1,0 +1,11 @@
+{% for r in rows %}
+<button type="button" class="picker-option" data-id="{{ r.id }}" data-label="{{ r.label }}">
+  {{ r.label }}{% if r.sub %} <small>{{ r.sub }}</small>{% endif %}
+</button>
+{% endfor %}
+{% if can_add %}
+<button type="button" class="picker-option add"
+        hx-post="/pickers/{{ kind }}/quick-add" hx-vals='{{ {"name": q} | tojson }}'
+        hx-target="closest .picker-results" hx-swap="innerHTML">+ Add "{{ q }}"</button>
+{% endif %}
+{% if not rows and not can_add %}<p class="muted pad">Start typing to search.</p>{% endif %}

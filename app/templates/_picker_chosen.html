@@ -1,0 +1,5 @@
+{% if error %}
+<p class="alert pad">{{ error }}</p>
+{% else %}
+<span class="picker-chosen" data-id="{{ id }}" data-label="{{ label }}">Added "{{ label }}"</span>
+{% endif %}

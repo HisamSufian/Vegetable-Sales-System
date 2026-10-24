@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<h1>Settings</h1>
+{% if saved %}<p class="ok-box">Saved.</p>{% endif %}
+<form method="post" action="/settings" class="card">
+  <label for="business_name">Business name</label>
+  <input id="business_name" name="business_name" value="{{ biz.business_name }}">
+
+  <label for="business_phone">Business phone</label>
+  <input id="business_phone" name="business_phone" type="tel" value="{{ biz.business_phone }}">
+
+  <label for="statement_footer">Statement footer text</label>
+  <textarea id="statement_footer" name="statement_footer" rows="3">{{ biz.statement_footer }}</textarea>
+
+  <button class="btn" type="submit">Save</button>
+</form>
+<p class="muted">The backup export button will be added here in a later phase.</p>
+{% endblock %}

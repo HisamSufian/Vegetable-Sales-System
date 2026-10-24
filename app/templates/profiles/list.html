@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ cfg.title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ cfg.title }}</h1>
+  <a class="btn small" href="/profiles/{{ kind }}/new">+ Create new</a>
+</div>
+<form class="searchbar" method="get" action="/profiles/{{ kind }}"
+      hx-get="/profiles/{{ kind }}" hx-trigger="input delay:200ms, change"
+      hx-target="#rows" hx-swap="innerHTML">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search..." autocomplete="off">
+  <label class="check"><input type="checkbox" name="hidden" value="1" {% if hidden %}checked{% endif %}> Show hidden</label>
+</form>
+<div id="rows">{% include "profiles/_rows.html" %}</div>
+{% endblock %}

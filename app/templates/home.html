@@ -1,7 +1,4 @@
 {% extends "base.html" %}
-{% block topbar_right %}
-<form method="post" action="/logout"><button type="submit" class="btn small secondary">Log out</button></form>
-{% endblock %}
 {% block content %}
 <div class="card">
   <h1>Welcome</h1>
@@ -9,6 +6,10 @@
   <p>Database:
     {% if db_ok %}<span class="ok">Connected</span>{% else %}<span class="alert-text">Not connected</span>{% endif %}
   </p>
-  <p class="muted">Setup is working. Profiles come next.</p>
 </div>
+<div class="grid">
+  <a class="tile" href="/profiles">Profiles</a>
+  <a class="tile" href="/settings">Settings</a>
+</div>
+<p class="muted">Sales, Stock, Totals and Expenses will appear here in later phases.</p>
 {% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<h1>{{ heading }}</h1>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="{{ action }}" class="card">
+  {% for f in cfg.fields %}
+  <label for="f-{{ f.name }}">{{ f.label }}{% if f.required %} *{% endif %}</label>
+  {% if f.type == "textarea" %}
+  <textarea id="f-{{ f.name }}" name="{{ f.name }}" rows="3">{{ values.get(f.name) or "" }}</textarea>
+  {% else %}
+  <input id="f-{{ f.name }}" name="{{ f.name }}" type="{{ f.type }}" value="{{ values.get(f.name) or '' }}"
+         {% if f.required %}required{% endif %} {% if loop.first %}autofocus{% endif %}
+         {% if f.upper %}style="text-transform: uppercase"{% endif %}>
+  {% endif %}
+  {% endfor %}
+  <button class="btn" type="submit">Save</button>
+  <a class="btn secondary" href="{{ cancel_url }}">Cancel</a>
+</form>
+{% endblock %}

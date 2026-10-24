@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ row.label }}{% endblock %}
+{% block content %}
+<p><a href="/profiles/{{ kind }}">&larr; {{ cfg.title }}</a></p>
+<div class="card">
+  <h1>{{ row.label }} {% if row.is_deleted %}<span class="badge">Hidden</span>{% endif %}</h1>
+  {% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+  <dl>
+    {% for f in cfg.fields if f.name != cfg.name_field %}
+    <dt>{{ f.label }}</dt><dd>{{ row[f.name] or "-" }}</dd>
+    {% endfor %}
+    <dt>Created</dt><dd>{{ row.created_at|dubai }}</dd>
+    <dt>Last changed</dt><dd>{{ row.updated_at|dubai }}</dd>
+  </dl>
+  <a class="btn" href="/profiles/{{ kind }}/{{ row.id }}/edit">Edit</a>
+  {% if row.is_deleted %}
+  <form method="post" action="/profiles/{{ kind }}/{{ row.id }}/restore">
+    <button class="btn secondary" type="submit">Restore (show again)</button>
+  </form>
+  {% elif not row.get("is_walk_in") %}
+  <form method="post" action="/profiles/{{ kind }}/{{ row.id }}/hide"
+        onsubmit="return confirm('Hide this profile? You can restore it later.');">
+    <button class="btn danger" type="submit">Hide</button>
+  </form>
+  {% else %}
+  <p class="muted">Built-in customer for cash sales. It cannot be hidden.</p>
+  {% endif %}
+</div>
+<div class="card muted">Trips, bills, payments and balance will appear here in later phases.</div>
+{% endblock %}
