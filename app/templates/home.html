@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block topbar_right %}
+<form method="post" action="/logout"><button type="submit" class="btn small secondary">Log out</button></form>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Welcome</h1>
+  <p>Logged in as <strong>{{ email }}</strong></p>
+  <p>Database:
+    {% if db_ok %}<span class="ok">Connected</span>{% else %}<span class="alert-text">Not connected</span>{% endif %}
+  </p>
+  <p class="muted">Setup is working. Profiles come next.</p>
+</div>
+{% endblock %}
