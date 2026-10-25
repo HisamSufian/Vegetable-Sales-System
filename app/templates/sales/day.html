@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ day.day_date|fdate }}{% endblock %}
+{% block content %}
+<p><a href="/sales">&larr; Sales</a></p>
+<div class="card">
+  <h1>{{ day.day_date|fdate }}
+    {% if day.status == "open" %}<span class="badge open">Open</span>{% else %}<span class="badge">Closed</span>{% endif %}</h1>
+  {% if existing %}<p class="ok-box">This Day already existed, so it was opened.</p>{% endif %}
+  <p>{{ trips|length }} trip{{ "" if trips|length == 1 else "s" }} | {{ total }} cartons arrived</p>
+  <a class="btn" href="/sales/day/{{ day.id }}/trips/new">+ Add trip</a>
+  {% if day.status == "open" %}
+  <form method="post" action="/sales/day/{{ day.id }}/close"
+        onsubmit="return confirm('Close this Day?');">
+    <button class="btn secondary" type="submit">Close Day</button>
+  </form>
+  {% else %}
+  <p class="muted">This Day is closed. You can still add or edit entries.</p>
+  <form method="post" action="/sales/day/{{ day.id }}/reopen">
+    <button class="btn secondary" type="submit">Reopen Day</button>
+  </form>
+  {% endif %}
+</div>
+
+<h2>Trips</h2>
+{% for t in trips %}
+<a class="row trip" href="/trips/{{ t.id }}">
+  <span class="row-main">
+    <strong>{{ t.trip_no }} &middot; {{ t.plate_number }}</strong>
+    <small>{{ t.farm_owner_name }} | {{ t.driver_name }}</small>
+    <small>{{ t.summary or "No vegetable rows yet" }}</small>
+  </span>
+  <span class="count">{{ t.total }}</span>
+</a>
+{% else %}
+<p class="muted">No trips yet. Tap "+ Add trip" when a truck arrives.</p>
+{% endfor %}
+<p class="muted">Selling and storing stock will be added in the next phases.</p>
+{% endblock %}

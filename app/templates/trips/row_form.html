@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_picker.html" import picker %}
+{% block title %}Edit row{% endblock %}
+{% block content %}
+<p><a href="/trips/{{ trip.id }}">&larr; {{ trip.trip_no }}</a></p>
+<h1>Edit row in {{ trip.trip_no }}</h1>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="/trips/{{ trip.id }}/rows/{{ row.id }}/edit" class="card">
+  {{ picker("vegetables", "vegetable_id", "Vegetable", v.vegetable_id, v.vegetable_label) }}
+  <label for="arrived_qty">Cartons arrived</label>
+  <input id="arrived_qty" name="arrived_qty" type="number" inputmode="numeric" min="0" step="1"
+         value="{{ v.qty_text }}" required>
+  <button class="btn" type="submit">Save</button>
+  <a class="btn secondary" href="/trips/{{ trip.id }}">Cancel</a>
+</form>
+{% endblock %}

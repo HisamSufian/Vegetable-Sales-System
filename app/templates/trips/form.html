@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "_picker.html" import picker %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<p><a href="{{ back_url }}">&larr; Back</a></p>
+<h1>{{ heading }}</h1>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="{{ action }}" class="card">
+  {{ picker("vehicles", "vehicle_id", "Truck (plate number) *", v.vehicle_id, v.vehicle_label, true) }}
+  {{ picker("farm-owners", "farm_owner_id", "Farm owner *", v.farm_owner_id, v.farm_owner_label) }}
+  {{ picker("drivers", "driver_id", "Driver *", v.driver_id, v.driver_label) }}
+  <label for="note">Note (optional)</label>
+  <textarea id="note" name="note" rows="2">{{ v.note }}</textarea>
+  <button class="btn" type="submit">Save trip</button>
+</form>
+<p class="muted">Not in the list? Type the name and tap "+ Add" to create it on the spot.</p>
+{% endblock %}

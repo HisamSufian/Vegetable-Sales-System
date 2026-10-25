@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Sales{% endblock %}
+{% block content %}
+<h1>Sales</h1>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+
+<div class="card">
+  <h2>Start a Day</h2>
+  <form method="post" action="/sales/start-day">
+    <label for="day_date">Date (today or any past date)</label>
+    <input id="day_date" name="day_date" type="date" value="{{ today }}" required>
+    <button class="btn" type="submit">Start Day</button>
+  </form>
+</div>
+
+<h2>Current</h2>
+{% for d in days.current %}
+<a class="row" href="/sales/day/{{ d.id }}">
+  <span class="row-main"><strong>{{ d.day_date|fdate }}</strong>
+    <small>{{ d.trip_count }} trip{{ "" if d.trip_count == 1 else "s" }} | {{ d.cartons }} cartons</small></span>
+  <span class="badge open">Open</span>
+</a>
+{% else %}
+<p class="muted">No open Day. Start one above.</p>
+{% endfor %}
+
+<h2>Previous</h2>
+{% for d in days.previous %}
+<a class="row" href="/sales/day/{{ d.id }}">
+  <span class="row-main"><strong>{{ d.day_date|fdate }}</strong>
+    <small>{{ d.trip_count }} trip{{ "" if d.trip_count == 1 else "s" }} | {{ d.cartons }} cartons</small></span>
+  <span class="badge">Closed</span>
+</a>
+{% else %}
+<p class="muted">No closed days yet.</p>
+{% endfor %}
+{% endblock %}

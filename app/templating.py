@@ -1,11 +1,10 @@
-from datetime import timedelta, timezone
 from pathlib import Path
 
 from fastapi.templating import Jinja2Templates
 
-templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+from app.timeutil import DUBAI
 
-DUBAI = timezone(timedelta(hours=4))   # UAE has no daylight saving
+templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 
 def dubai_time(value) -> str:
@@ -13,4 +12,10 @@ def dubai_time(value) -> str:
     return value.astimezone(DUBAI).strftime("%d %b %Y, %H:%M") if value else ""
 
 
+def format_date(value) -> str:
+    """Shows a date like: Sat 24 Oct 2026."""
+    return value.strftime("%a %d %b %Y") if value else ""
+
+
 templates.env.filters["dubai"] = dubai_time
+templates.env.filters["fdate"] = format_date

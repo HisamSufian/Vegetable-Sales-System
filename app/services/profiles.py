@@ -149,10 +149,26 @@ def duplicate_message(cfg: dict, value: str) -> str:
 
 def usage_blockers(cfg: dict, profile_id: int) -> list[str]:
     """Reasons a profile cannot be hidden because other records use it,
-    for example 'This farm owner is used by 3 trips'.
-    Nothing uses profiles yet; later phases (trips, sales, payments)
-    will add their checks here."""
-    return []
+    for example 'This farm owner is used by 3 trips (T-0001, ...)'.
+    Later phases add their own checks here (sales, payments)."""
+    key = cfg["key"]
+    trip_columns = {"farm-owners": "farm_owner_id", "vehicles": "vehicle_id", "drivers": "driver_id"}
+    problems = []
+    if key in trip_columns:
+        trips = query(f"SELECT trip_no FROM trips WHERE {trip_columns[key]} = %s "
+                      f"AND is_deleted = false ORDER BY id", [profile_id])
+        if trips:
+            names = ", ".join(t["trip_no"] for t in trips[:6]) + (", ..." if len(trips) > 6 else "")
+            problems.append(f"This {cfg['singular']} is used by {len(trips)} "
+                            f"trip{'s' if len(trips) != 1 else ''} ({names}). "
+                            f"Edit or hide those trips first.")
+    if key == "vegetables":
+        count = query("SELECT count(*) AS n FROM trip_rows WHERE vegetable_id = %s "
+                      "AND is_deleted = false", [profile_id])[0]["n"]
+        if count:
+            problems.append(f"This vegetable is used by {count} trip row{'s' if count != 1 else ''}. "
+                            f"Change or hide those rows first.")
+    return problems
 
 
 UniqueViolation = psycopg.errors.UniqueViolation

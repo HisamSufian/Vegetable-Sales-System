@@ -56,3 +56,11 @@ dd { margin: 2px 0 0; }
                  font-size: 16px; background: #fff; border: 0; border-bottom: 1px solid #eee; cursor: pointer; }
 .picker-option small { color: #667366; margin-left: 6px; }
 .picker-option.add { color: #1f6b34; font-weight: 700; }
+
+/* Phase 2 */
+.badge.open { background: #e6f4ea; color: #1f6b34; }
+.row.trip .count { font-size: 1.4rem; font-weight: 700; color: #1f6b34; }
+.row .actions { display: flex; gap: 6px; align-items: center; }
+.row .actions form { margin: 0; }
+.row .actions .btn { margin: 0; }
+textarea { width: 100%; }

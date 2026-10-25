@@ -2,12 +2,12 @@
    Use:  {% from "_picker.html" import picker %}
          {{ picker("farm-owners", "farm_owner_id", "Farm owner") }}
    The chosen id is submitted under the given field name. #}
-{% macro picker(kind, name, label, selected_id="", selected_label="") %}
+{% macro picker(kind, name, label, selected_id="", selected_label="", autofocus=False) %}
 <div class="picker">
   <label>{{ label }}</label>
-  <input type="hidden" name="{{ name }}" value="{{ selected_id }}" class="picker-value">
-  <input type="text" name="q" class="picker-input" value="{{ selected_label }}"
-         placeholder="Type to search..." autocomplete="off"
+  <input type="hidden" name="{{ name }}" value="{{ selected_id or '' }}" class="picker-value">
+  <input type="text" name="q" class="picker-input" value="{{ selected_label or '' }}"
+         placeholder="Type to search..." autocomplete="off" {% if autofocus %}autofocus{% endif %}
          hx-get="/pickers/{{ kind }}/search" hx-trigger="input changed delay:200ms, focus"
          hx-target="next .picker-results" hx-swap="innerHTML">
   <div class="picker-results"></div>

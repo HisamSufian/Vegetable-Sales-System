@@ -1,15 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-  <h1>Welcome</h1>
-  <p>Logged in as <strong>{{ email }}</strong></p>
-  <p>Database:
+  <h1>Today: {{ today|fdate }}</h1>
+  {% if today_day %}
+    <p>Status: <strong>{{ "Open" if today_day.status == "open" else "Closed" }}</strong></p>
+    <a class="btn" href="/sales/day/{{ today_day.id }}">Continue today's Day</a>
+  {% else %}
+    <form method="post" action="/sales/start-day">
+      <input type="hidden" name="day_date" value="{{ today }}">
+      <button class="btn" type="submit">Start today's Day</button>
+    </form>
+  {% endif %}
+  <p class="muted">Logged in as {{ email }}. Database:
     {% if db_ok %}<span class="ok">Connected</span>{% else %}<span class="alert-text">Not connected</span>{% endif %}
   </p>
 </div>
 <div class="grid">
+  <a class="tile" href="/sales">Sales</a>
   <a class="tile" href="/profiles">Profiles</a>
   <a class="tile" href="/settings">Settings</a>
 </div>
-<p class="muted">Sales, Stock, Totals and Expenses will appear here in later phases.</p>
+<p class="muted">Stock, Totals and Expenses will appear here in later phases.</p>
 {% endblock %}
