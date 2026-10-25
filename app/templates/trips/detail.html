@@ -15,6 +15,7 @@
   <a class="btn secondary" href="/trips/{{ trip.id }}/edit">Edit trip</a>
 </div>
 
+{% if flash %}<p class="ok-box">{{ flash }}</p>{% endif %}
 {% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
 
 <h2>Vegetable rows</h2>
@@ -36,6 +37,7 @@
 
 <form method="post" action="/trips/{{ trip.id }}/rows" class="card">
   <h2>Add a vegetable row</h2>
+  <p class="muted">If the vegetable is already in this trip, the cartons are added to its row.</p>
   {{ picker("vegetables", "vegetable_id", "Vegetable", add.vegetable_id, add.vegetable_label, true) }}
   <label for="arrived_qty">Cartons arrived</label>
   <input id="arrived_qty" name="arrived_qty" type="number" inputmode="numeric" min="1" step="1"

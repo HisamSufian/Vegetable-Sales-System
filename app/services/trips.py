@@ -147,9 +147,17 @@ def check_row_form(form: dict, minimum: int, current_vegetable_id: int | None = 
     return values, errors
 
 
-def add_row(trip_id: int, vegetable_id: int, qty: int) -> None:
-    execute("INSERT INTO trip_rows (trip_id, vegetable_id, arrived_qty) VALUES (%s, %s, %s)",
-            [trip_id, vegetable_id, qty])
+def add_row(trip_id: int, vegetable_id: int, qty: int) -> dict:
+    """Adds cartons of a vegetable to a trip. A trip has one row per vegetable, so if
+    the vegetable is already there, the cartons are added to its row.
+    Returns {'merged': True/False, 'total': cartons now in the row}."""
+    row = execute(
+        "INSERT INTO trip_rows (trip_id, vegetable_id, arrived_qty) VALUES (%s, %s, %s) "
+        "ON CONFLICT (trip_id, vegetable_id) WHERE is_deleted = false "
+        "DO UPDATE SET arrived_qty = trip_rows.arrived_qty + EXCLUDED.arrived_qty "
+        "RETURNING arrived_qty, (xmax <> 0) AS merged",
+        [trip_id, vegetable_id, qty])[0]
+    return {"merged": row["merged"], "total": row["arrived_qty"]}
 
 
 def update_row(row_id: int, vegetable_id: int, qty: int) -> None:

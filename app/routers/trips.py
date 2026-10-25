@@ -4,6 +4,7 @@ from fastapi.responses import RedirectResponse
 from app.auth import require_login
 from app.deps import form_data
 from app.services.days import get_day
+from app.services.profiles import UniqueViolation
 from app.services.trips import (
     add_row, check_choices, check_row_form, create_trip, get_row, get_trip, hide_row, hide_trip,
     parse_trip_form, row_blockers, rows_for_trip, trip_blockers, update_row, update_trip,
@@ -37,9 +38,10 @@ def _trip_form(request, heading, action, back_url, values, errors=None, status=2
 
 def _trip_page(request, trip, errors=None, add=None, status=200):
     rows = rows_for_trip(trip["id"])
+    flash = request.session.pop("flash", None)   # one-time message, e.g. "added to existing row"
     return templates.TemplateResponse(request, "trips/detail.html", {
         "trip": trip, "rows": rows, "total": sum(r["arrived_qty"] for r in rows),
-        "errors": errors or [], "add": add or EMPTY_ADD}, status_code=status)
+        "errors": errors or [], "add": add or EMPTY_ADD, "flash": flash}, status_code=status)
 
 
 # ---------------- trips ----------------
@@ -112,7 +114,11 @@ def add_trip_row(request: Request, trip_id: int, form: dict = Depends(form_data)
     values, errors = check_row_form(form, minimum=1)
     if errors:
         return _trip_page(request, trip, errors=errors, add=values, status=400)
-    add_row(trip_id, values["vegetable_id"], values["arrived_qty"])
+    result = add_row(trip_id, values["vegetable_id"], values["arrived_qty"])
+    if result["merged"]:
+        request.session["flash"] = (
+            f"Added {values['arrived_qty']} cartons to the existing {values['vegetable_label']} "
+            f"row. It now has {result['total']} cartons.")
     return RedirectResponse(f"/trips/{trip_id}", status_code=303)
 
 
@@ -134,7 +140,13 @@ def edit_row(request: Request, trip_id: int, row_id: int, form: dict = Depends(f
     if errors:
         return templates.TemplateResponse(request, "trips/row_form.html", {
             "trip": trip, "row": row, "v": values, "errors": errors}, status_code=400)
-    update_row(row_id, values["vegetable_id"], values["arrived_qty"])
+    try:
+        update_row(row_id, values["vegetable_id"], values["arrived_qty"])
+    except UniqueViolation:
+        errors = [f"This trip already has a {values['vegetable_label']} row. "
+                  f"Edit that row instead, or hide this one."]
+        return templates.TemplateResponse(request, "trips/row_form.html", {
+            "trip": trip, "row": row, "v": values, "errors": errors}, status_code=400)
     return RedirectResponse(f"/trips/{trip_id}", status_code=303)
 
 
