@@ -13,6 +13,8 @@
   </form>
 </div>
 
+<a class="btn secondary" href="/rate-pending">Rate pending{% if pending %} ({{ pending }}){% endif %}</a>
+
 <h2>Current</h2>
 {% for d in days.current %}
 <a class="row" href="/sales/day/{{ d.id }}">

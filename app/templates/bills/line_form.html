@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "_picker.html" import picker %}
+{% block title %}Edit line{% endblock %}
+{% block content %}
+<p><a href="/bills/{{ bill.id }}">&larr; {{ bill.bill_no }}</a></p>
+<h1>Edit line in {{ bill.bill_no }}</h1>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="/bills/{{ bill.id }}/lines/{{ line.id }}/edit" class="card">
+  {{ picker("stock", "stock_key", "Stock to sell from *", v.stock_key, v.stock_label) }}
+  <label for="qty">Cartons *</label>
+  <input id="qty" name="qty" type="number" inputmode="numeric" min="1" step="1" value="{{ v.qty_text }}" required>
+  <label for="rate">Rate per carton (AED)</label>
+  <input id="rate" name="rate" type="text" inputmode="decimal" value="{{ v.rate_text }}" placeholder="Leave empty = rate pending">
+  <button class="btn" type="submit">Save</button>
+  <a class="btn secondary" href="/bills/{{ bill.id }}">Cancel</a>
+</form>
+{% endblock %}

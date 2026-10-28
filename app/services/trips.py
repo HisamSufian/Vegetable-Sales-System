@@ -1,6 +1,7 @@
 """Trips (one truck + one farm owner + one driver on one Day) and their vegetable rows."""
-from app.db import execute, query
+from app.db import execute, pool, query
 from app.services.profiles import get_kind, get_profile
+from app.services.stock import SOLD_BY_ROW
 
 TRIP_SELECT = """
     SELECT t.*, d.day_date, d.status AS day_status,
@@ -85,15 +86,31 @@ def create_trip(day_id: int, values: dict) -> int:
 
 
 def update_trip(trip_id: int, values: dict) -> None:
-    execute("UPDATE trips SET vehicle_id = %s, farm_owner_id = %s, driver_id = %s, note = %s "
-            "WHERE id = %s",
-            [values["vehicle_id"], values["farm_owner_id"], values["driver_id"],
-             values["note"] or None, trip_id])
+    """Saves the trip. If the truck was corrected, the sale lines of this trip
+    follow it (they record which vehicle the cartons were taken from)."""
+    with pool.connection() as conn:
+        old_vehicle = conn.execute("SELECT vehicle_id FROM trips WHERE id = %s",
+                                   [trip_id]).fetchone()["vehicle_id"]
+        conn.execute("UPDATE trips SET vehicle_id = %s, farm_owner_id = %s, driver_id = %s, note = %s "
+                     "WHERE id = %s",
+                     [values["vehicle_id"], values["farm_owner_id"], values["driver_id"],
+                      values["note"] or None, trip_id])
+        if old_vehicle != values["vehicle_id"]:
+            conn.execute("UPDATE sale_lines SET from_vehicle_id = %s WHERE from_vehicle_id = %s "
+                         "AND trip_row_id IN (SELECT id FROM trip_rows WHERE trip_id = %s)",
+                         [values["vehicle_id"], old_vehicle, trip_id])
 
 
 def trip_blockers(trip_id: int) -> list[str]:
     """Reasons a trip cannot be hidden, for example 'This trip has 12 sale lines'.
-    Nothing depends on trips yet; Phase 3 (sales) and Phase 6 (settlements) add checks."""
+    Phase 6 (settlements) adds more checks."""
+    count = query("SELECT count(*) AS n FROM sale_lines l "
+                  "JOIN sale_bills b ON b.id = l.bill_id JOIN trip_rows r ON r.id = l.trip_row_id "
+                  "WHERE r.trip_id = %s AND l.is_deleted = false AND b.is_deleted = false",
+                  [trip_id])[0]["n"]
+    if count:
+        return [f"This trip has {count} sale line{'s' if count != 1 else ''}. "
+                f"Hide or edit those first."]
     return []
 
 
@@ -102,9 +119,12 @@ def hide_trip(trip_id: int) -> None:
 
 
 # ---------------- trip rows ----------------
-ROW_SELECT = """
-    SELECT r.*, veg.name AS vegetable_name
-    FROM trip_rows r JOIN vegetables veg ON veg.id = r.vegetable_id
+ROW_SELECT = f"""
+    SELECT r.*, veg.name AS vegetable_name,
+           COALESCE(s.qty, 0) AS sold_qty, r.arrived_qty - COALESCE(s.qty, 0) AS stock_left
+    FROM trip_rows r
+    JOIN vegetables veg ON veg.id = r.vegetable_id
+    LEFT JOIN {SOLD_BY_ROW} s ON s.trip_row_id = r.id
 """
 
 
@@ -166,8 +186,13 @@ def update_row(row_id: int, vegetable_id: int, qty: int) -> None:
 
 
 def row_blockers(row_id: int) -> list[str]:
-    """Reasons a row cannot be hidden (for example sales were made from it).
-    Phase 3 adds the real check."""
+    """Reasons a row cannot be hidden, for example 'This row has 3 sale lines'."""
+    count = query("SELECT count(*) AS n FROM sale_lines l JOIN sale_bills b ON b.id = l.bill_id "
+                  "WHERE l.trip_row_id = %s AND l.is_deleted = false AND b.is_deleted = false",
+                  [row_id])[0]["n"]
+    if count:
+        return [f"This row has {count} sale line{'s' if count != 1 else ''}. "
+                f"Hide or edit those first."]
     return []
 
 

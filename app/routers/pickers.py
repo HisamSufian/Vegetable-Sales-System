@@ -8,9 +8,19 @@ from app.services.profiles import (
     UniqueViolation, clean_values, create_profile, duplicate_message,
     exact_match_exists, get_kind, search_options,
 )
+from app.services.stock import describe, search_stock
 from app.templating import templates
 
 router = APIRouter(dependencies=[Depends(require_login)])
+
+
+@router.get("/pickers/stock/search")
+def search_stock_options(request: Request, q: str = ""):
+    """Stock dropdown for sales: vegetable, cartons left, farm owner, trip, date, vehicle."""
+    q = q.strip()
+    rows = [describe(r) for r in search_stock(q)]
+    return templates.TemplateResponse(request, "_picker_results.html", {
+        "kind": "stock", "rows": rows, "q": q, "can_add": False})
 
 
 @router.get("/pickers/{kind}/search")

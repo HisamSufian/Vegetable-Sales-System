@@ -64,3 +64,17 @@ dd { margin: 2px 0 0; }
 .row .actions form { margin: 0; }
 .row .actions .btn { margin: 0; }
 textarea { width: 100%; }
+
+/* Phase 3 */
+.neg { color: #b42318; font-weight: 700; }
+.picker-option.neg { color: #b42318; }
+.warn-box { background: #fff4e0; color: #8a5300; padding: 10px 12px; border-radius: 8px; font-weight: 600; }
+.badge.pending { background: #fff4e0; color: #8a5300; }
+.pending-text { color: #8a5300; font-weight: 600; }
+.row.line { align-items: flex-start; }
+.totals div { display: flex; justify-content: space-between; padding: 4px 0; }
+.totals .grand { font-size: 1.2rem; font-weight: 700; border-top: 1px solid #ddd; margin-top: 4px; padding-top: 8px; }
+.inline-form { display: flex; gap: 8px; align-items: center; }
+.inline-form input { flex: 1; }
+.inline-form .btn { margin: 0; }
+.pending-card p { margin-top: 0; }

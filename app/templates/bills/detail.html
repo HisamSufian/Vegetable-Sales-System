@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% from "_picker.html" import picker %}
+{% block title %}{{ bill.bill_no }}{% endblock %}
+{% block content %}
+<p><a href="/sales/day/{{ bill.day_id }}">&larr; {{ bill.day_date|fdate }}</a></p>
+<div class="card">
+  <h1>{{ bill.bill_no }}</h1>
+  <p><strong>{{ bill.customer_name }}</strong> | {{ bill.day_date|fdate }}</p>
+</div>
+
+{% if flash %}<p class="ok-box">{{ flash }}</p>{% endif %}
+{% if warn %}<p class="warn-box">{{ warn }}</p>{% endif %}
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+
+<h2>Lines</h2>
+{% for l in lines %}
+<div class="row line">
+  <span class="row-main">
+    <strong>{{ l.vegetable_name }}: {{ l.qty }} cartons</strong>
+    {% if l.rate is none %}
+      <small><span class="badge pending">Rate pending</span> counts as 0.00</small>
+    {% else %}
+      <small>@ {{ l.rate|money }} = <strong>{{ l.amount|money }}</strong></small>
+    {% endif %}
+    <small>{{ l.farm_owner_name }} | {{ l.trip_no }} | {{ l.arrival_date|fdate }} | {{ l.plate_number }}</small>
+    {% if l.stock_left < 0 %}
+    <small class="neg">Stock is {{ l.stock_left }} (more sold than arrived).
+      <a href="/trips/{{ l.trip_id }}">Check the arrival count</a></small>
+    {% endif %}
+  </span>
+  <span class="actions">
+    <a class="btn small secondary" href="/bills/{{ bill.id }}/lines/{{ l.id }}/edit">Edit</a>
+    <form method="post" action="/bills/{{ bill.id }}/lines/{{ l.id }}/hide"
+          onsubmit="return confirm('Hide this line?');">
+      <button class="btn small danger" type="submit">Hide</button>
+    </form>
+  </span>
+</div>
+{% else %}
+<p class="muted">No lines yet. Add the first one below.</p>
+{% endfor %}
+
+<div class="card totals">
+  <div><span>Subtotal</span><span>{{ totals.subtotal|money }}</span></div>
+  <div><span>Discount</span><span>- {{ totals.discount|money }}</span></div>
+  <div class="grand"><span>Total (AED)</span><span>{{ totals.total|money }}</span></div>
+  {% if totals.pending_count %}
+  <p class="pending-text">{{ totals.pending_count }} line{{ "" if totals.pending_count == 1 else "s" }} still without a rate (counted as 0).
+    <a href="/rate-pending">Rate pending list</a></p>
+  {% endif %}
+  {% if totals.total < 0 %}<p class="neg">The discount is more than the bill.</p>{% endif %}
+</div>
+
+<form method="post" action="/bills/{{ bill.id }}/lines" class="card">
+  <h2>Add a line</h2>
+  {{ picker("stock", "stock_key", "Stock to sell from *", add.stock_key, add.stock_label, true) }}
+  <label for="qty">Cartons *</label>
+  <input id="qty" name="qty" type="number" inputmode="numeric" min="1" step="1" value="{{ add.qty_text }}" placeholder="e.g. 20">
+  <label for="rate">Rate per carton (AED)</label>
+  <input id="rate" name="rate" type="text" inputmode="decimal" value="{{ add.rate_text }}" placeholder="Leave empty = rate pending">
+  <button class="btn" type="submit">Add line</button>
+</form>
+
+<form method="post" action="/bills/{{ bill.id }}/details" class="card">
+  <h2>Discount and note</h2>
+  <label for="discount">Discount on the whole bill (AED)</label>
+  <input id="discount" name="discount" type="text" inputmode="decimal" value="{{ details.discount }}">
+  <label for="note">Note (optional)</label>
+  <textarea id="note" name="note" rows="2">{{ details.note }}</textarea>
+  <button class="btn secondary" type="submit">Save</button>
+</form>
+
+<form method="post" action="/bills/{{ bill.id }}/hide"
+      onsubmit="return confirm('Hide this whole bill? Its cartons go back to stock.');">
+  <button class="btn danger" type="submit">Hide this bill</button>
+</form>
+{% endblock %}

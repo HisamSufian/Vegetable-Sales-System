@@ -1,5 +1,5 @@
 {% for r in rows %}
-<button type="button" class="picker-option" data-id="{{ r.id }}" data-label="{{ r.label }}">
+<button type="button" class="picker-option{% if r.neg %} neg{% endif %}" data-id="{{ r.id }}" data-label="{{ r.label }}">
   {{ r.label }}{% if r.sub %} <small>{{ r.sub }}</small>{% endif %}
 </button>
 {% endfor %}
@@ -8,4 +8,4 @@
         hx-post="/pickers/{{ kind }}/quick-add" hx-vals='{{ {"name": q} | tojson }}'
         hx-target="closest .picker-results" hx-swap="innerHTML">+ Add "{{ q }}"</button>
 {% endif %}
-{% if not rows and not can_add %}<p class="muted pad">Start typing to search.</p>{% endif %}
+{% if not rows and not can_add %}<p class="muted pad">{% if q %}Nothing found.{% elif kind == "stock" %}No stock with cartons left. Type to search all rows.{% else %}Start typing to search.{% endif %}</p>{% endif %}

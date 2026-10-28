@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Rate pending{% endblock %}
+{% block content %}
+<h1>Rate pending</h1>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<p class="muted">Sale lines that still have no rate. They count as 0 until you enter one.</p>
+{% for l in lines %}
+<div class="card pending-card">
+  <p><strong>{{ l.vegetable_name }}: {{ l.qty }} cartons</strong><br>
+     <a href="/bills/{{ l.bill_id }}">{{ l.bill_no }}</a> | {{ l.customer_name }} | {{ l.day_date|fdate }} | {{ l.trip_no }}</p>
+  <form method="post" action="/rate-pending/{{ l.id }}" class="inline-form">
+    <input name="rate" type="text" inputmode="decimal" placeholder="Rate per carton" required>
+    <button class="btn small" type="submit">Save rate</button>
+  </form>
+</div>
+{% else %}
+<p class="ok-box">Nothing pending. Every sale line has a rate.</p>
+{% endfor %}
+{% endblock %}

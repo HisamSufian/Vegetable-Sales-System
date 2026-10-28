@@ -17,5 +17,11 @@ def format_date(value) -> str:
     return value.strftime("%a %d %b %Y") if value else ""
 
 
+def money(value) -> str:
+    """Shows an amount like 1,250.50 (AED)."""
+    return "-" if value is None else f"{value:,.2f}"
+
+
+templates.env.filters["money"] = money
 templates.env.filters["dubai"] = dubai_time
 templates.env.filters["fdate"] = format_date

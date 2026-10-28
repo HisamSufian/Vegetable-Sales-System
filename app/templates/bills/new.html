@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "_picker.html" import picker %}
+{% block title %}Add sale{% endblock %}
+{% block content %}
+<p><a href="/sales/day/{{ day_id }}">&larr; Back to the Day</a></p>
+<h1>Add sale</h1>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="/sales/day/{{ day_id }}/sale" class="card">
+  {{ picker("customers", "customer_id", "Customer *", customer_id, customer_label, true) }}
+  <button class="btn" type="submit">Continue</button>
+</form>
+<p class="muted">Not in the list? Type the name and tap "+ Add". If the customer already has a bill
+for this Day, the new lines go on that same bill.</p>
+{% endblock %}

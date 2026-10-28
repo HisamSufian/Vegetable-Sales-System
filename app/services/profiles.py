@@ -168,6 +168,13 @@ def usage_blockers(cfg: dict, profile_id: int) -> list[str]:
         if count:
             problems.append(f"This vegetable is used by {count} trip row{'s' if count != 1 else ''}. "
                             f"Change or hide those rows first.")
+    if key == "customers":
+        bills = query("SELECT bill_no FROM sale_bills WHERE customer_id = %s "
+                      "AND is_deleted = false ORDER BY id", [profile_id])
+        if bills:
+            names = ", ".join(b["bill_no"] for b in bills[:6]) + (", ..." if len(bills) > 6 else "")
+            problems.append(f"This customer has {len(bills)} bill{'s' if len(bills) != 1 else ''} "
+                            f"({names}). Hide those bills first.")
     return problems
 
 

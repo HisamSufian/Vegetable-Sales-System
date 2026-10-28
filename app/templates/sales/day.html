@@ -6,8 +6,13 @@
   <h1>{{ day.day_date|fdate }}
     {% if day.status == "open" %}<span class="badge open">Open</span>{% else %}<span class="badge">Closed</span>{% endif %}</h1>
   {% if existing %}<p class="ok-box">This Day already existed, so it was opened.</p>{% endif %}
-  <p>{{ trips|length }} trip{{ "" if trips|length == 1 else "s" }} | {{ total }} cartons arrived</p>
+  <p>{{ trips|length }} trip{{ "" if trips|length == 1 else "s" }} | {{ total }} cartons arrived<br>
+     {{ bills|length }} bill{{ "" if bills|length == 1 else "s" }} | Sales: <strong>{{ sales_total|money }} AED</strong></p>
   <a class="btn" href="/sales/day/{{ day.id }}/trips/new">+ Add trip</a>
+  <a class="btn" href="/sales/day/{{ day.id }}/sale">+ Add sale</a>
+  <form method="post" action="/sales/day/{{ day.id }}/walk-in">
+    <button class="btn secondary" type="submit">Walk-in / Cash sale</button>
+  </form>
   {% if day.status == "open" %}
   <form method="post" action="/sales/day/{{ day.id }}/close"
         onsubmit="return confirm('Close this Day?');">
@@ -20,6 +25,22 @@
   </form>
   {% endif %}
 </div>
+
+{% if flash %}<p class="ok-box">{{ flash }}</p>{% endif %}
+
+<h2>Bills</h2>
+{% for b in bills %}
+<a class="row" href="/bills/{{ b.id }}">
+  <span class="row-main">
+    <strong>{{ b.bill_no }} &middot; {{ b.customer_name }}</strong>
+    <small>{{ b.line_count }} line{{ "" if b.line_count == 1 else "s" }}
+      {% if b.totals.pending_count %}| <span class="pending-text">{{ b.totals.pending_count }} rate pending</span>{% endif %}</small>
+  </span>
+  <span class="count">{{ b.totals.total|money }}</span>
+</a>
+{% else %}
+<p class="muted">No sales yet. Tap "+ Add sale" or "Walk-in / Cash sale".</p>
+{% endfor %}
 
 <h2>Trips</h2>
 {% for t in trips %}
@@ -34,5 +55,5 @@
 {% else %}
 <p class="muted">No trips yet. Tap "+ Add trip" when a truck arrives.</p>
 {% endfor %}
-<p class="muted">Selling and storing stock will be added in the next phases.</p>
+<p class="muted">Storing stock, returns and wastage will be added in the next phases.</p>
 {% endblock %}
