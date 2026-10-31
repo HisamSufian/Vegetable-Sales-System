@@ -1,5 +1,6 @@
 """Money calculations in ONE place (no database here, so they are easy to test).
 All amounts are AED with 2 decimals, using exact Decimal numbers (never floats)."""
+import re
 from decimal import Decimal, InvalidOperation
 
 CENTS = Decimal("0.01")
@@ -45,3 +46,11 @@ def parse_money(text, *, blank=None) -> tuple[Decimal | None, str | None]:
     if value != value.quantize(CENTS):
         return None, "Use at most 2 decimals (for example 25.50)."
     return value.quantize(CENTS), None
+
+
+def parse_signed_int(text) -> int | None:
+    """'5', '+5' or '-3' -> a whole number. Anything else (blank, 1.5, text) -> None."""
+    cleaned = (text or "").strip().replace(" ", "")
+    if re.fullmatch(r"[+-]?\d{1,9}", cleaned):
+        return int(cleaned)
+    return None

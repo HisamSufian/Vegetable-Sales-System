@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+from psycopg.errors import CheckViolation
 from fastapi.responses import RedirectResponse
 
 from app.auth import require_login
@@ -93,7 +94,13 @@ def edit_trip(request: Request, trip_id: int, form: dict = Depends(form_data)):
     if errors:
         return _trip_form(request, f"Edit {trip['trip_no']}", f"/trips/{trip_id}/edit",
                           f"/trips/{trip_id}", values, errors, 400)
-    update_trip(trip_id, values)
+    try:
+        update_trip(trip_id, values)
+    except CheckViolation:
+        errors = ["This truck cannot be used: stock was moved between it and this trip's truck. "
+                  "Hide those stock moves first."]
+        return _trip_form(request, f"Edit {trip['trip_no']}", f"/trips/{trip_id}/edit",
+                          f"/trips/{trip_id}", values, errors, 400)
     return RedirectResponse(f"/trips/{trip_id}", status_code=303)
 
 

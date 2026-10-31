@@ -23,8 +23,8 @@
       <small>@ {{ l.rate|money }} = <strong>{{ l.amount|money }}</strong></small>
     {% endif %}
     <small>{{ l.farm_owner_name }} | {{ l.trip_no }} | {{ l.arrival_date|fdate }} | {{ l.plate_number }}</small>
-    {% if l.stock_left < 0 %}
-    <small class="neg">Stock is {{ l.stock_left }} (more sold than arrived).
+    {% if l.stock_left is not none and l.stock_left < 0 %}
+    <small class="neg">Stock of this row in {{ l.plate_number }} is {{ l.stock_left }} (more taken out than is there).
       <a href="/trips/{{ l.trip_id }}">Check the arrival count</a></small>
     {% endif %}
   </span>

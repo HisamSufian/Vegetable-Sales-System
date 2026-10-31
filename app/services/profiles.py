@@ -162,6 +162,18 @@ def usage_blockers(cfg: dict, profile_id: int) -> list[str]:
             problems.append(f"This {cfg['singular']} is used by {len(trips)} "
                             f"trip{'s' if len(trips) != 1 else ''} ({names}). "
                             f"Edit or hide those trips first.")
+    if key == "vehicles":
+        used = query(
+            "SELECT (SELECT count(*) FROM stock_moves WHERE is_deleted = false "
+            "AND (from_vehicle_id = %s OR to_vehicle_id = %s))"
+            " + (SELECT count(*) FROM wastage WHERE is_deleted = false AND vehicle_id = %s)"
+            " + (SELECT count(*) FROM stock_corrections WHERE is_deleted = false AND vehicle_id = %s)"
+            " + (SELECT count(*) FROM sale_lines l JOIN sale_bills b ON b.id = l.bill_id "
+            "WHERE l.is_deleted = false AND b.is_deleted = false AND l.from_vehicle_id = %s) AS n",
+            [profile_id] * 5)[0]["n"]
+        if used:
+            problems.append(f"This vehicle is used by {used} stock or sale entr{'ies' if used != 1 else 'y'}. "
+                            f"Hide or change those first.")
     if key == "vegetables":
         count = query("SELECT count(*) AS n FROM trip_rows WHERE vegetable_id = %s "
                       "AND is_deleted = false", [profile_id])[0]["n"]

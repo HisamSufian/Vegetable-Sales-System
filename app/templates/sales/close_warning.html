@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Close Day{% endblock %}
+{% block content %}
+<p><a href="/sales/day/{{ day.id }}">&larr; {{ day.day_date|fdate }}</a></p>
+<h1>Close {{ day.day_date|fdate }}?</h1>
+<p class="warn-box">These cartons are still in the vehicle they arrived in. If that truck is leaving,
+store them in a storage vehicle first. You can still close the Day without doing it.</p>
+{% for it in items %}
+<div class="row">
+  <span class="row-main">
+    <strong>{{ it.vegetable_name }}: {{ it.stock_left }} cartons</strong>
+    <small>{{ it.farm_owner_name }} | {{ it.trip_no }} | in {{ it.plate_number }}</small>
+  </span>
+  <a class="btn small" href="/stock/move/new?stock_key={{ it.trip_row_id }}-{{ it.vehicle_id }}">Store</a>
+</div>
+{% endfor %}
+<form method="post" action="/sales/day/{{ day.id }}/close">
+  <input type="hidden" name="confirm" value="1">
+  <button class="btn secondary" type="submit">Close Day anyway</button>
+</form>
+<a class="btn" href="/sales/day/{{ day.id }}">Back to the Day</a>
+{% endblock %}

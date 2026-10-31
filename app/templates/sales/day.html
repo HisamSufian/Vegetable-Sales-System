@@ -10,6 +10,7 @@
      {{ bills|length }} bill{{ "" if bills|length == 1 else "s" }} | Sales: <strong>{{ sales_total|money }} AED</strong></p>
   <a class="btn" href="/sales/day/{{ day.id }}/trips/new">+ Add trip</a>
   <a class="btn" href="/sales/day/{{ day.id }}/sale">+ Add sale</a>
+  <a class="btn secondary" href="/stock/move/new">Store stock</a>
   <form method="post" action="/sales/day/{{ day.id }}/walk-in">
     <button class="btn secondary" type="submit">Walk-in / Cash sale</button>
   </form>
@@ -55,5 +56,5 @@
 {% else %}
 <p class="muted">No trips yet. Tap "+ Add trip" when a truck arrives.</p>
 {% endfor %}
-<p class="muted">Storing stock, returns and wastage will be added in the next phases.</p>
+<p class="muted">Returns will be added in the next phase.</p>
 {% endblock %}

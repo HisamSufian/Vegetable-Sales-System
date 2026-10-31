@@ -2,7 +2,7 @@
 import unittest
 from decimal import Decimal
 
-from app.services.calc import bill_totals, line_amount, parse_money
+from app.services.calc import bill_totals, line_amount, parse_money, parse_signed_int
 
 
 class LineAndBillTests(unittest.TestCase):
@@ -45,6 +45,19 @@ class ParseMoneyTests(unittest.TestCase):
             value, error = parse_money(bad)
             self.assertIsNone(value, bad)
             self.assertTrue(error, bad)
+
+
+class SignedIntTests(unittest.TestCase):
+    def test_valid(self):
+        self.assertEqual(parse_signed_int("5"), 5)
+        self.assertEqual(parse_signed_int("+5"), 5)
+        self.assertEqual(parse_signed_int("-12"), -12)
+        self.assertEqual(parse_signed_int(" - 3 "), -3)
+        self.assertEqual(parse_signed_int("0"), 0)
+
+    def test_invalid(self):
+        for bad in ("", "  ", "1.5", "abc", "--3", "5-", "1e3", "12345678901"):
+            self.assertIsNone(parse_signed_int(bad), bad)
 
 
 if __name__ == "__main__":

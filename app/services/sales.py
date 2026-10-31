@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from app.db import execute, query
 from app.services import calc, stock
-from app.services.stock import SOLD_BY_ROW
+from app.services.stock import LOCATION_STOCK
 from app.services.trips import to_int
 
 BILL_SELECT = """
@@ -16,7 +16,7 @@ BILL_SELECT = """
 LINE_SELECT = f"""
     SELECT l.*, veg.name AS vegetable_name, t.id AS trip_id, t.trip_no,
            d.day_date AS arrival_date, f.name AS farm_owner_name, v.plate_number,
-           r.arrived_qty - COALESCE(s.qty, 0) AS stock_left
+           ls.qty AS stock_left
     FROM sale_lines l
     JOIN trip_rows r ON r.id = l.trip_row_id
     JOIN vegetables veg ON veg.id = r.vegetable_id
@@ -24,7 +24,7 @@ LINE_SELECT = f"""
     JOIN days d ON d.id = t.day_id
     JOIN farm_owners f ON f.id = t.farm_owner_id
     JOIN vehicles v ON v.id = l.from_vehicle_id
-    LEFT JOIN {SOLD_BY_ROW} s ON s.trip_row_id = r.id
+    LEFT JOIN {LOCATION_STOCK} ls ON ls.trip_row_id = l.trip_row_id AND ls.vehicle_id = l.from_vehicle_id
 """
 
 
@@ -134,13 +134,8 @@ def hide_line(line_id: int) -> None:
 
 
 def negative_stock_warning(trip_row_id: int, vehicle_id: int) -> str | None:
-    """A warning (never a block) when a row has been sold below zero."""
-    row = stock.get_stock(trip_row_id, vehicle_id)
-    if row and row["stock_left"] < 0:
-        return (f"Warning: {row['vegetable_name']} from {row['trip_no']} is now at "
-                f"{row['stock_left']} cartons (more sold than arrived). "
-                f"Please check the arrival count on the trip.")
-    return None
+    """A warning (never a block) when a vehicle's stock of a row has gone below zero."""
+    return stock.negative_message(trip_row_id, vehicle_id)
 
 
 # ---------------- Rate pending ----------------

@@ -78,3 +78,14 @@ textarea { width: 100%; }
 .inline-form input { flex: 1; }
 .inline-form .btn { margin: 0; }
 .pending-card p { margin-top: 0; }
+
+/* Phase 4 */
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.btn-row .btn { margin: 0; }
+.tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+.tabs a { flex: 1; text-align: center; padding: 10px; border-radius: 8px; background: #e3ece3;
+          text-decoration: none; font-weight: 600; }
+.tabs a.active { background: #1f6b34; color: #fff; }
+.group-total { float: right; font-size: .95rem; color: #1f6b34; }
+.group-total.neg { color: #b42318; }
+.row .count.neg { color: #b42318; }

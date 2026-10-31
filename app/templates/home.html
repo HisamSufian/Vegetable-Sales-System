@@ -17,9 +17,10 @@
 </div>
 <div class="grid">
   <a class="tile" href="/sales">Sales</a>
+  <a class="tile" href="/stock">Stock</a>
   <a class="tile" href="/profiles">Profiles</a>
   <a class="tile" href="/settings">Settings</a>
 </div>
 {% if pending %}<a class="row" href="/rate-pending"><span class="row-main"><strong>Rate pending</strong><small>{{ pending }} sale line{{ "" if pending == 1 else "s" }} without a rate</small></span><span class="badge pending">{{ pending }}</span></a>{% endif %}
-<p class="muted">Stock, Totals and Expenses will appear here in later phases.</p>
+<p class="muted">Totals and Expenses will appear here in later phases.</p>
 {% endblock %}

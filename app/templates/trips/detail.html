@@ -21,7 +21,7 @@
 <h2>Vegetable rows</h2>
 {% for r in rows %}
 <div class="row">
-  <span class="row-main"><strong>{{ r.vegetable_name }}</strong><small>{{ r.arrived_qty }} arrived | {{ r.sold_qty }} sold |
+  <span class="row-main"><strong>{{ r.vegetable_name }}</strong><small>{{ r.arrived_qty }} arrived | {{ r.sold_qty }} sold |{% if r.wasted_qty %} {{ r.wasted_qty }} wasted |{% endif %}
       <span class="{{ 'neg' if r.stock_left < 0 }}">{{ r.stock_left }} left</span></small>
     {% if r.stock_left < 0 %}<small class="neg">Sold more than arrived. Edit the arrival count if it was entered wrongly.</small>{% endif %}
   </span>

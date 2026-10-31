@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Stock{% endblock %}
+{% block content %}
+<h1>Stock</h1>
+{% if flash %}<p class="ok-box">{{ flash }}</p>{% endif %}
+{% if warn %}<p class="warn-box">{{ warn }}</p>{% endif %}
+
+<div class="btn-row">
+  <a class="btn small" href="/stock/move/new">Store / move</a>
+  <a class="btn small" href="/stock/wastage/new">Wastage</a>
+  <a class="btn small" href="/stock/correction/new">Correction</a>
+</div>
+
+<div class="tabs">
+  <a class="{{ 'active' if view == 'vehicle' }}" href="/stock?view=vehicle">By vehicle</a>
+  <a class="{{ 'active' if view == 'vegetable' }}" href="/stock?view=vegetable">By vegetable</a>
+</div>
+
+{% for g in groups %}
+<h2>{{ g.title }} <span class="group-total {{ 'neg' if g.total < 0 }}">{{ g.total }} cartons</span></h2>
+{% for it in g["items"] %}
+<a class="row" href="/trips/{{ it.trip_id }}">
+  <span class="row-main">
+    <strong>{{ it.main }}</strong>
+    <small>{{ it.farm_owner_name }} | {{ it.trip_no }} | {{ it.arrival_date|fdate }}</small>
+  </span>
+  <span class="count {{ 'neg' if it.stock_left < 0 }}">{{ it.stock_left }}</span>
+</a>
+{% endfor %}
+{% else %}
+<p class="muted">No stock right now. When trucks arrive and you add their rows, stock appears here.</p>
+{% endfor %}
+
+<h2>Recent entries</h2>
+{% for e in entries %}
+<div class="row line">
+  <span class="row-main">
+    <strong>{{ e.text }}</strong>
+    <small>{{ e.date|fdate }}{% if e.note %} | {{ e.note }}{% endif %}</small>
+  </span>
+  <span class="actions">
+    <a class="btn small secondary" href="/stock/{{ e.kind }}/{{ e.id }}/edit">Edit</a>
+    <form method="post" action="/stock/{{ e.kind }}/{{ e.id }}/hide" onsubmit="return confirm('Hide this entry?');">
+      <button class="btn small danger" type="submit">Hide</button>
+    </form>
+  </span>
+</div>
+{% else %}
+<p class="muted">No moves, wastage or corrections yet.</p>
+{% endfor %}
+{% endblock %}

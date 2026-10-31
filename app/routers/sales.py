@@ -7,6 +7,7 @@ from app.auth import require_login
 from app.deps import form_data
 from app.services.days import get_day, list_days, set_day_status, start_day
 from app.services.sales import bills_for_day, pending_count
+from app.services.stock import unstored_for_day
 from app.services.trips import trips_for_day
 from app.templating import templates
 from app.timeutil import dubai_today
@@ -56,8 +57,15 @@ def day_page(request: Request, day_id: int, existing: str = ""):
 
 
 @router.post("/sales/day/{day_id:int}/close")
-def close_day(day_id: int):
-    _day_or_404(day_id)
+def close_day(request: Request, day_id: int, form: dict = Depends(form_data)):
+    """Warns about cartons still in their arrival vehicle, but never blocks:
+    'Close Day anyway' always works."""
+    day = _day_or_404(day_id)
+    if not form.get("confirm"):
+        items = unstored_for_day(day_id)
+        if items:
+            return templates.TemplateResponse(request, "sales/close_warning.html", {
+                "day": day, "items": items})
     set_day_status(day_id, "closed")
     return RedirectResponse("/sales", status_code=303)
 

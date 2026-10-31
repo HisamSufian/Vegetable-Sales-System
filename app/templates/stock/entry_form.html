@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "_picker.html" import picker %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<p><a href="/stock">&larr; Stock</a></p>
+<h1>{{ title }}</h1>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="{{ action }}" class="card">
+  {{ picker("stock", "stock_key", "Stock (vegetable, trip, vehicle) *", v.stock_key, v.stock_label, true) }}
+  {% if kind == "move" %}
+  {{ picker("vehicles", "to_vehicle_id", "Store in vehicle *", v.to_vehicle_id, v.to_vehicle_label) }}
+  {% endif %}
+
+  <label for="qty">{% if kind == "correction" %}Change in cartons (+ or -) *{% else %}Cartons *{% endif %}</label>
+  {% if kind == "correction" %}
+  <input id="qty" name="qty" type="text" inputmode="text" value="{{ v.qty_text }}" placeholder="e.g. +5 or -3">
+  {% else %}
+  <input id="qty" name="qty" type="number" inputmode="numeric" min="1" step="1" value="{{ v.qty_text }}" placeholder="e.g. 40">
+  {% endif %}
+
+  <label for="entry_date">Date</label>
+  <input id="entry_date" name="entry_date" type="date" value="{{ v.date_text }}" required>
+
+  {% if kind == "correction" %}
+  <label for="reason">Reason *</label>
+  <textarea id="reason" name="reason" rows="2" placeholder="Why is this correction needed?">{{ v.reason }}</textarea>
+  {% else %}
+  <label for="note">Note (optional)</label>
+  <textarea id="note" name="note" rows="2">{{ v.note }}</textarea>
+  {% endif %}
+
+  <button class="btn" type="submit">Save</button>
+  <a class="btn secondary" href="/stock">Cancel</a>
+</form>
+{% if kind == "move" %}
+<p class="muted">Choose the stock where it is now, then the vehicle to store it in. A vehicle is just a plate;
+type a new plate and tap "+ Add" if it is not in the list.</p>
+{% endif %}
+{% endblock %}
