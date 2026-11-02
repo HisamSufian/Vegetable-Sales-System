@@ -7,6 +7,7 @@ from app.services.profiles import (
     KINDS, UniqueViolation, clean_values, create_profile, duplicate_message, get_kind,
     get_profile, list_profiles, set_hidden, update_profile, usage_blockers,
 )
+from app.services.sales import bills_for_customer
 from app.templating import templates
 from fastapi import HTTPException
 
@@ -22,9 +23,10 @@ def _load(kind: str, profile_id: int):
 
 
 def _detail(request: Request, kind: str, cfg: dict, row: dict, errors=None, status=200):
-    return templates.TemplateResponse(
-        request, "profiles/detail.html",
-        {"kind": kind, "cfg": cfg, "row": row, "errors": errors or []}, status_code=status)
+    context = {"kind": kind, "cfg": cfg, "row": row, "errors": errors or []}
+    if kind == "customers":
+        context["bills"] = bills_for_customer(row["id"])
+    return templates.TemplateResponse(request, "profiles/detail.html", context, status_code=status)
 
 
 @router.get("")

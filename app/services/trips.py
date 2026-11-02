@@ -1,7 +1,7 @@
 """Trips (one truck + one farm owner + one driver on one Day) and their vegetable rows."""
 from app.db import execute, pool, query
 from app.services.profiles import get_kind, get_profile
-from app.services.stock import ROW_STOCK, SOLD_BY_ROW, WASTED_BY_ROW
+from app.services.stock import RETURNED_BY_ROW, ROW_STOCK, SOLD_BY_ROW, WASTED_BY_ROW
 
 TRIP_SELECT = """
     SELECT t.*, d.day_date, d.status AS day_status,
@@ -102,6 +102,10 @@ def update_trip(trip_id: int, values: dict) -> None:
                                   ("wastage", "vehicle_id"), ("stock_corrections", "vehicle_id")):
                 conn.execute(f"UPDATE {table} SET {column} = %s WHERE {column} = %s AND {rows_of_trip}",
                              [new_vehicle, old_vehicle, trip_id])
+            conn.execute("UPDATE sale_returns SET back_to_vehicle_id = %s WHERE back_to_vehicle_id = %s "
+                         "AND sale_line_id IN (SELECT l.id FROM sale_lines l WHERE l.trip_row_id IN "
+                         "(SELECT id FROM trip_rows WHERE trip_id = %s))",
+                         [new_vehicle, old_vehicle, trip_id])
 
 
 def _stock_entry_count(where_row: str, param: int) -> int:
@@ -138,15 +142,31 @@ def hide_trip(trip_id: int) -> None:
     execute("UPDATE trips SET is_deleted = true WHERE id = %s", [trip_id])
 
 
+def set_trip_status(trip_id: int, status: str) -> None:
+    """Trip status: 'open' or 'settled' (Phase 6 adds the settlement checks)."""
+    execute("UPDATE trips SET status = %s WHERE id = %s", [status, trip_id])
+
+
+def reopen_if_settled(trip_row_id: int) -> str | None:
+    """A return or wastage was added to this row. If its trip is settled, reopen it
+    and return the trip number so the caller can warn. Settlement lines are never touched."""
+    rows = execute("UPDATE trips SET status = 'open' WHERE status = 'settled' "
+                   "AND id = (SELECT trip_id FROM trip_rows WHERE id = %s) RETURNING trip_no",
+                   [trip_row_id])
+    return rows[0]["trip_no"] if rows else None
+
+
 # ---------------- trip rows ----------------
 ROW_SELECT = f"""
     SELECT r.*, veg.name AS vegetable_name,
-           COALESCE(sold.qty, 0) AS sold_qty, COALESCE(w.qty, 0) AS wasted_qty,
+           COALESCE(sold.qty, 0) AS sold_qty, COALESCE(rtn.qty, 0) AS returned_qty,
+           COALESCE(w.qty, 0) AS wasted_qty,
            COALESCE(rs.qty, r.arrived_qty) AS stock_left
     FROM trip_rows r
     JOIN vegetables veg ON veg.id = r.vegetable_id
     LEFT JOIN {SOLD_BY_ROW} sold ON sold.trip_row_id = r.id
     LEFT JOIN {WASTED_BY_ROW} w ON w.trip_row_id = r.id
+    LEFT JOIN {RETURNED_BY_ROW} rtn ON rtn.trip_row_id = r.id
     LEFT JOIN {ROW_STOCK} rs ON rs.trip_row_id = r.id
 """
 

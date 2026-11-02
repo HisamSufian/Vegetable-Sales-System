@@ -33,8 +33,9 @@ def _line_or_404(bill_id: int, line_id: int) -> dict:
 
 
 def _bill_page(request: Request, bill: dict, errors=None, add=None, details=None, status=200):
-    lines = lines_for_bill(bill["id"])
-    totals = calc.bill_totals(lines, bill["discount_amount"])
+    lines = lines_for_bill(bill["id"])          # each line carries its own "returns"
+    returns = [r for l in lines for r in l["returns"]]
+    totals = calc.bill_totals(lines, bill["discount_amount"], returns)
     return templates.TemplateResponse(request, "bills/detail.html", {
         "bill": bill, "lines": lines, "totals": totals, "errors": errors or [],
         "add": add or EMPTY_ADD,
@@ -138,6 +139,12 @@ def edit_line(request: Request, bill_id: int, line_id: int, form: dict = Depends
     bill = _bill_or_404(bill_id)
     line = _line_or_404(bill_id, line_id)
     values, errors = check_line_form(form)
+    returned = line["returned_qty"]
+    if returned and values["qty"] is not None and values["qty"] < returned:
+        errors.append(f"{returned} cartons were already returned from this line, "
+                      f"so it cannot be less than that.")
+    if returned and values["trip_row_id"] and values["trip_row_id"] != line["trip_row_id"]:
+        errors.append("This line has returns, so its stock cannot be changed. Hide the returns first.")
     if errors:
         return templates.TemplateResponse(request, "bills/line_form.html", {
             "bill": bill, "line": line, "v": values, "errors": errors}, status_code=400)
@@ -149,9 +156,12 @@ def edit_line(request: Request, bill_id: int, line_id: int, form: dict = Depends
 
 
 @router.post("/bills/{bill_id:int}/lines/{line_id:int}/hide")
-def hide_sale_line(bill_id: int, line_id: int):
-    _bill_or_404(bill_id)
-    _line_or_404(bill_id, line_id)
+def hide_sale_line(request: Request, bill_id: int, line_id: int):
+    bill = _bill_or_404(bill_id)
+    line = _line_or_404(bill_id, line_id)
+    if line["returned_qty"]:
+        return _bill_page(request, bill, errors=[
+            f"This line has {line['returned_qty']} cartons returned. Hide the return first."], status=400)
     hide_line(line_id)
     return RedirectResponse(f"/bills/{bill_id}", status_code=303)
 

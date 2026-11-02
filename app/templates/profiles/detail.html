@@ -26,5 +26,18 @@
   <p class="muted">Built-in customer for cash sales. It cannot be hidden.</p>
   {% endif %}
 </div>
+{% if kind == "customers" %}
+<h2>Bills</h2>
+{% for b in bills %}
+<a class="row" href="/bills/{{ b.id }}">
+  <span class="row-main"><strong>{{ b.bill_no }}</strong><small>{{ b.day_date|fdate }}</small></span>
+  <span class="count">{{ b.totals.total|money }}</span>
+</a>
+{% else %}
+<p class="muted">No bills yet.</p>
+{% endfor %}
+<div class="card muted">Payments, cheques and the balance will appear here in a later phase.</div>
+{% else %}
 <div class="card muted">Trips, bills, payments and balance will appear here in later phases.</div>
+{% endif %}
 {% endblock %}

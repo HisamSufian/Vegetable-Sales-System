@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_picker.html" import picker %}
+{% block title %}Return{% endblock %}
+{% block content %}
+<p><a href="/bills/{{ bill.id }}">&larr; {{ bill.bill_no }}</a></p>
+<h1>{{ "Edit return" if return_row else "Return cartons" }}</h1>
+<div class="card">
+  <p><strong>{{ line.vegetable_name }}</strong>: {{ line.qty }} cartons sold
+    {% if line.rate is not none %}@ {{ line.rate|money }}{% else %}(rate still pending){% endif %}<br>
+    {{ bill.customer_name }} | {{ bill.bill_no }} | sold from {{ line.plate_number }}<br>
+    {{ line.farm_owner_name }} | {{ line.trip_no }}<br>
+    Already returned: {{ others }} | Can still return: <strong>{{ max_qty }}</strong></p>
+</div>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="{{ action }}" class="card">
+  <label for="qty">Cartons returned *</label>
+  <input id="qty" name="qty" type="number" inputmode="numeric" min="1" step="1" value="{{ v.qty_text }}" autofocus>
+
+  <label for="credit_rate">Credit rate per carton (AED) *</label>
+  <input id="credit_rate" name="credit_rate" type="text" inputmode="decimal" value="{{ v.credit_rate_text }}"
+         placeholder="{{ 'Type the credit rate' if line.rate is none else '' }}">
+  <p class="muted">Starts as the rate on the sale line. Change it if the customer is credited differently.</p>
+
+  {{ picker("vehicles", "back_to_vehicle_id", "Vehicle the cartons are in now *", v.vehicle_id, v.vehicle_label) }}
+
+  <label for="return_date">Date</label>
+  <input id="return_date" name="return_date" type="date" value="{{ v.date_text }}" required>
+
+  <label for="note">Note (optional)</label>
+  <textarea id="note" name="note" rows="2">{{ v.note_text }}</textarea>
+
+  <button class="btn" type="submit">Save return</button>
+  <a class="btn secondary" href="/bills/{{ bill.id }}">Cancel</a>
+</form>
+<p class="muted">Some cartons damaged? Save this return first, then record them under
+<a href="/stock/wastage/new">Wastage</a>.</p>
+{% if return_row %}
+<form method="post" action="/bills/{{ bill.id }}/returns/{{ return_row.id }}/hide"
+      onsubmit="return confirm('Hide this return? The cartons leave the stock again.');">
+  <button class="btn danger" type="submit">Hide this return</button>
+</form>
+{% endif %}
+{% endblock %}

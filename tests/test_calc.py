@@ -30,6 +30,25 @@ class LineAndBillTests(unittest.TestCase):
         self.assertEqual(totals["total"], Decimal("0.00"))
 
 
+class ReturnTests(unittest.TestCase):
+    def test_dinesh_returns_5_of_20_chili_at_23(self):
+        totals = bill_totals([{"qty": 20, "rate": Decimal("23")}], Decimal("0"),
+                             [{"qty": 5, "credit_rate": Decimal("23")}])
+        self.assertEqual(totals["subtotal"], Decimal("460.00"))
+        self.assertEqual(totals["returns_credit"], Decimal("115.00"))
+        self.assertEqual(totals["total"], Decimal("345.00"))
+
+    def test_return_at_a_different_rate_with_discount(self):
+        totals = bill_totals([{"qty": 20, "rate": Decimal("25")}], Decimal("10"),
+                             [{"qty": 5, "credit_rate": Decimal("20")}])
+        self.assertEqual(totals["total"], Decimal("390.00"))   # 500 - 100 - 10
+
+    def test_no_returns_leaves_total_unchanged(self):
+        totals = bill_totals([{"qty": 2, "rate": Decimal("15")}], Decimal("0"))
+        self.assertEqual(totals["returns_credit"], Decimal("0.00"))
+        self.assertEqual(totals["total"], Decimal("30.00"))
+
+
 class ParseMoneyTests(unittest.TestCase):
     def test_blank_returns_default(self):
         self.assertEqual(parse_money("", blank=None), (None, None))

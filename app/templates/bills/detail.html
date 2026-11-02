@@ -23,12 +23,18 @@
       <small>@ {{ l.rate|money }} = <strong>{{ l.amount|money }}</strong></small>
     {% endif %}
     <small>{{ l.farm_owner_name }} | {{ l.trip_no }} | {{ l.arrival_date|fdate }} | {{ l.plate_number }}</small>
+    {% for r in l.returns %}
+    <small class="ret">Returned {{ r.qty }} @ {{ r.credit_rate|money }} = - {{ r.credit_amount|money }}
+      | into {{ r.plate_number }} | {{ r.return_date|fdate }}
+      <a href="/bills/{{ bill.id }}/returns/{{ r.id }}/edit">Edit</a></small>
+    {% endfor %}
     {% if l.stock_left is not none and l.stock_left < 0 %}
     <small class="neg">Stock of this row in {{ l.plate_number }} is {{ l.stock_left }} (more taken out than is there).
       <a href="/trips/{{ l.trip_id }}">Check the arrival count</a></small>
     {% endif %}
   </span>
   <span class="actions">
+    {% if l.remaining > 0 %}<a class="btn small" href="/bills/{{ bill.id }}/lines/{{ l.id }}/return">Return</a>{% endif %}
     <a class="btn small secondary" href="/bills/{{ bill.id }}/lines/{{ l.id }}/edit">Edit</a>
     <form method="post" action="/bills/{{ bill.id }}/lines/{{ l.id }}/hide"
           onsubmit="return confirm('Hide this line?');">
@@ -42,6 +48,7 @@
 
 <div class="card totals">
   <div><span>Subtotal</span><span>{{ totals.subtotal|money }}</span></div>
+  {% if totals.returns_credit %}<div><span>Returns</span><span>- {{ totals.returns_credit|money }}</span></div>{% endif %}
   <div><span>Discount</span><span>- {{ totals.discount|money }}</span></div>
   <div class="grand"><span>Total (AED)</span><span>{{ totals.total|money }}</span></div>
   {% if totals.pending_count %}

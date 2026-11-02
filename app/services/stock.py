@@ -28,19 +28,42 @@ LEDGER = """(
   UNION ALL
     SELECT c.trip_row_id, c.vehicle_id, c.qty_change
     FROM stock_corrections c WHERE c.is_deleted = false
+  UNION ALL
+    SELECT l.trip_row_id, rt.back_to_vehicle_id, rt.qty
+    FROM sale_returns rt
+    JOIN sale_lines l ON l.id = rt.sale_line_id
+    JOIN sale_bills b ON b.id = l.bill_id
+    WHERE rt.is_deleted = false AND l.is_deleted = false AND b.is_deleted = false
 )"""
 
 # cartons per trip row in each vehicle / in total
 LOCATION_STOCK = f"(SELECT trip_row_id, vehicle_id, SUM(delta) AS qty FROM {LEDGER} lg GROUP BY trip_row_id, vehicle_id)"
 ROW_STOCK = f"(SELECT trip_row_id, SUM(delta) AS qty FROM {LEDGER} lg GROUP BY trip_row_id)"
 
-# cartons sold / wasted per trip row (shown on the trip page)
+# NET cartons sold per trip row = sold minus returned (shown on the trip page)
 SOLD_BY_ROW = """(
-    SELECT l.trip_row_id, SUM(l.qty) AS qty
-    FROM sale_lines l JOIN sale_bills b ON b.id = l.bill_id
-    WHERE l.is_deleted = false AND b.is_deleted = false
+    SELECT x.trip_row_id, SUM(x.qty) AS qty FROM (
+        SELECT l.trip_row_id, l.qty
+        FROM sale_lines l JOIN sale_bills b ON b.id = l.bill_id
+        WHERE l.is_deleted = false AND b.is_deleted = false
+      UNION ALL
+        SELECT l.trip_row_id, -rt.qty
+        FROM sale_returns rt
+        JOIN sale_lines l ON l.id = rt.sale_line_id
+        JOIN sale_bills b ON b.id = l.bill_id
+        WHERE rt.is_deleted = false AND l.is_deleted = false AND b.is_deleted = false
+    ) x
+    GROUP BY x.trip_row_id
+)"""
+RETURNED_BY_ROW = """(
+    SELECT l.trip_row_id, SUM(rt.qty) AS qty
+    FROM sale_returns rt
+    JOIN sale_lines l ON l.id = rt.sale_line_id
+    JOIN sale_bills b ON b.id = l.bill_id
+    WHERE rt.is_deleted = false AND l.is_deleted = false AND b.is_deleted = false
     GROUP BY l.trip_row_id
 )"""
+# cartons wasted per trip row
 WASTED_BY_ROW = """(
     SELECT w.trip_row_id, SUM(w.qty) AS qty
     FROM wastage w WHERE w.is_deleted = false

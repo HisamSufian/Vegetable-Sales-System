@@ -89,3 +89,9 @@ textarea { width: 100%; }
 .group-total { float: right; font-size: .95rem; color: #1f6b34; }
 .group-total.neg { color: #b42318; }
 .row .count.neg { color: #b42318; }
+
+/* Phase 5 */
+.row.line { flex-wrap: wrap; gap: 8px; }
+.row .actions { flex-wrap: wrap; }
+.ret { color: #1f6b34; }
+.ret a { margin-left: 6px; }

@@ -5,6 +5,7 @@ from app.auth import require_login
 from app.deps import form_data
 from app.services import stock, stock_entries
 from app.services.stock_entries import TITLES
+from app.services.trips import reopen_if_settled
 from app.templating import templates
 
 router = APIRouter(prefix="/stock", dependencies=[Depends(require_login)])
@@ -52,7 +53,7 @@ def create_entry(request: Request, kind: str, form: dict = Depends(form_data)):
     if errors:
         return _form_page(request, kind, values, f"/stock/{kind}/new", errors, 400)
     stock_entries.create(kind, values)
-    return _saved(request, values)
+    return _saved(request, kind, values)
 
 
 @router.get("/{kind}/{entry_id:int}/edit")
@@ -66,12 +67,12 @@ def edit_entry_form(request: Request, kind: str, entry_id: int):
 @router.post("/{kind}/{entry_id:int}/edit")
 def edit_entry(request: Request, kind: str, entry_id: int, form: dict = Depends(form_data)):
     _kind_or_404(kind)
-    _entry_or_404(kind, entry_id)
+    entry = _entry_or_404(kind, entry_id)
     values, errors = stock_entries.check_form(kind, form)
     if errors:
         return _form_page(request, kind, values, f"/stock/{kind}/{entry_id}/edit", errors, 400)
     stock_entries.update(kind, entry_id, values)
-    return _saved(request, values)
+    return _saved(request, kind, values, previous_row_id=entry["trip_row_id"])
 
 
 @router.post("/{kind}/{entry_id:int}/hide")
@@ -82,9 +83,19 @@ def hide_entry(kind: str, entry_id: int):
     return RedirectResponse("/stock", status_code=303)
 
 
-def _saved(request: Request, values: dict):
+def _saved(request: Request, kind: str, values: dict, previous_row_id: int | None = None):
+    """Saves a message for the Stock page. Wastage on a settled trip reopens that trip."""
     request.session["flash"] = "Saved."
-    warning = stock.negative_message(values["trip_row_id"], values["vehicle_id"])
-    if warning:
-        request.session["flash_warn"] = warning
+    warnings = []
+    negative = stock.negative_message(values["trip_row_id"], values["vehicle_id"])
+    if negative:
+        warnings.append(negative)
+    if kind == "wastage":
+        for row_id in {values["trip_row_id"], previous_row_id} - {None}:
+            trip_no = reopen_if_settled(row_id)
+            if trip_no:
+                warnings.append(f"{trip_no} was settled. It has been reopened so you can "
+                                f"adjust the settlement lines.")
+    if warnings:
+        request.session["flash_warn"] = " ".join(warnings)
     return RedirectResponse("/stock", status_code=303)

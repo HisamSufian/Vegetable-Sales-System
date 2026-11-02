@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from app.db import execute, query
 from app.services import calc, stock
+from app.services import returns as returns_service
 from app.services.stock import LOCATION_STOCK
 from app.services.trips import to_int
 
@@ -16,7 +17,7 @@ BILL_SELECT = """
 LINE_SELECT = f"""
     SELECT l.*, veg.name AS vegetable_name, t.id AS trip_id, t.trip_no,
            d.day_date AS arrival_date, f.name AS farm_owner_name, v.plate_number,
-           ls.qty AS stock_left
+           ls.qty AS stock_left, COALESCE(rtn.qty, 0) AS returned_qty
     FROM sale_lines l
     JOIN trip_rows r ON r.id = l.trip_row_id
     JOIN vegetables veg ON veg.id = r.vegetable_id
@@ -25,6 +26,8 @@ LINE_SELECT = f"""
     JOIN farm_owners f ON f.id = t.farm_owner_id
     JOIN vehicles v ON v.id = l.from_vehicle_id
     LEFT JOIN {LOCATION_STOCK} ls ON ls.trip_row_id = l.trip_row_id AND ls.vehicle_id = l.from_vehicle_id
+    LEFT JOIN (SELECT sale_line_id, SUM(qty) AS qty FROM sale_returns
+               WHERE is_deleted = false GROUP BY sale_line_id) rtn ON rtn.sale_line_id = l.id
 """
 
 
@@ -57,18 +60,32 @@ def get_or_create_bill(day_id: int, customer_id: int) -> tuple[int, bool]:
     return existing[0]["id"], False
 
 
-def bills_for_day(day_id: int) -> list[dict]:
-    """The Day's bills with their totals (calculated by calc.py)."""
-    bills = query(BILL_SELECT + " WHERE b.day_id = %s AND b.is_deleted = false ORDER BY b.id", [day_id])
+def _attach_totals(bills: list[dict]) -> list[dict]:
+    """Adds line_count and totals (lines, returns, discount) to each bill."""
+    ids = [b["id"] for b in bills]
     lines = query("SELECT l.bill_id, l.qty, l.rate FROM sale_lines l "
-                  "WHERE l.is_deleted = false AND l.bill_id = ANY(%s)", [[b["id"] for b in bills]])
+                  "WHERE l.is_deleted = false AND l.bill_id = ANY(%s)", [ids])
     by_bill: dict[int, list[dict]] = {}
     for l in lines:
         by_bill.setdefault(l["bill_id"], []).append(l)
+    returns = returns_service.returns_for_bills(ids)
     for b in bills:
         b["line_count"] = len(by_bill.get(b["id"], []))
-        b["totals"] = calc.bill_totals(by_bill.get(b["id"], []), b["discount_amount"])
+        b["totals"] = calc.bill_totals(by_bill.get(b["id"], []), b["discount_amount"],
+                                       returns.get(b["id"], []))
     return bills
+
+
+def bills_for_day(day_id: int) -> list[dict]:
+    """The Day's bills with their totals (calculated by calc.py)."""
+    return _attach_totals(query(BILL_SELECT + " WHERE b.day_id = %s AND b.is_deleted = false ORDER BY b.id",
+                                [day_id]))
+
+
+def bills_for_customer(customer_id: int) -> list[dict]:
+    """A customer's bills, newest first (for the customer profile)."""
+    return _attach_totals(query(BILL_SELECT + " WHERE b.customer_id = %s AND b.is_deleted = false "
+                                "ORDER BY d.day_date DESC, b.id DESC LIMIT 100", [customer_id]))
 
 
 def update_bill_details(bill_id: int, discount: Decimal, note: str | None) -> None:
@@ -83,8 +100,13 @@ def hide_bill(bill_id: int) -> None:
 # ---------------- lines ----------------
 def lines_for_bill(bill_id: int) -> list[dict]:
     lines = query(LINE_SELECT + " WHERE l.bill_id = %s AND l.is_deleted = false ORDER BY l.id", [bill_id])
+    by_line: dict[int, list[dict]] = {}
+    for r in returns_service.returns_for_bill(bill_id):
+        by_line.setdefault(r["sale_line_id"], []).append(r)
     for l in lines:
         l["amount"] = calc.line_amount(l["qty"], l["rate"])
+        l["returns"] = by_line.get(l["id"], [])
+        l["remaining"] = l["qty"] - l["returned_qty"]      # cartons that can still be returned
     return lines
 
 

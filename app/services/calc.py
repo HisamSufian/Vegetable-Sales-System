@@ -15,13 +15,16 @@ def line_amount(qty: int, rate: Decimal | None) -> Decimal:
     return (Decimal(qty) * rate).quantize(CENTS)
 
 
-def bill_totals(lines: list[dict], discount: Decimal) -> dict:
-    """lines: dicts with 'qty' and 'rate'. total = subtotal - discount."""
+def bill_totals(lines: list[dict], discount: Decimal, returns: list[dict] | None = None) -> dict:
+    """lines: dicts with 'qty' and 'rate'. returns: dicts with 'qty' and 'credit_rate'.
+    total = subtotal - returns credit - discount."""
     subtotal = sum((line_amount(l["qty"], l["rate"]) for l in lines), ZERO)
+    returns_credit = sum((line_amount(r["qty"], r["credit_rate"]) for r in (returns or [])), ZERO)
     return {
         "subtotal": subtotal,
+        "returns_credit": returns_credit,
         "discount": discount,
-        "total": subtotal - discount,
+        "total": subtotal - returns_credit - discount,
         "pending_count": sum(1 for l in lines if l["rate"] is None),
     }
 

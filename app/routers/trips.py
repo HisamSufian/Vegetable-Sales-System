@@ -8,7 +8,7 @@ from app.services.days import get_day
 from app.services.profiles import UniqueViolation
 from app.services.trips import (
     add_row, check_choices, check_row_form, create_trip, get_row, get_trip, hide_row, hide_trip,
-    parse_trip_form, row_blockers, rows_for_trip, trip_blockers, update_row, update_trip,
+    parse_trip_form, row_blockers, rows_for_trip, set_trip_status, trip_blockers, update_row, update_trip,
 )
 from app.templating import templates
 
@@ -112,6 +112,20 @@ def hide(request: Request, trip_id: int):
         return _trip_page(request, trip, errors=problems, status=400)
     hide_trip(trip_id)
     return RedirectResponse(f"/sales/day/{trip['day_id']}", status_code=303)
+
+
+@router.post("/trips/{trip_id:int}/settle")
+def mark_settled(trip_id: int):
+    _trip_or_404(trip_id)
+    set_trip_status(trip_id, "settled")
+    return RedirectResponse(f"/trips/{trip_id}", status_code=303)
+
+
+@router.post("/trips/{trip_id:int}/reopen")
+def reopen(trip_id: int):
+    _trip_or_404(trip_id)
+    set_trip_status(trip_id, "open")
+    return RedirectResponse(f"/trips/{trip_id}", status_code=303)
 
 
 # ---------------- vegetable rows ----------------

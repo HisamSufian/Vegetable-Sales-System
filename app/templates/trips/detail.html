@@ -13,6 +13,16 @@
     {% if trip.note %}<dt>Note</dt><dd>{{ trip.note }}</dd>{% endif %}
   </dl>
   <a class="btn secondary" href="/trips/{{ trip.id }}/edit">Edit trip</a>
+  {% if trip.status == "settled" %}
+  <form method="post" action="/trips/{{ trip.id }}/reopen">
+    <button class="btn secondary" type="submit">Reopen trip</button>
+  </form>
+  {% else %}
+  <form method="post" action="/trips/{{ trip.id }}/settle" onsubmit="return confirm('Mark this trip as settled?');">
+    <button class="btn secondary" type="submit">Mark settled</button>
+  </form>
+  {% endif %}
+  <p class="muted">A settled trip is reopened automatically if you add a return or wastage to it.</p>
 </div>
 
 {% if flash %}<p class="ok-box">{{ flash }}</p>{% endif %}
@@ -21,7 +31,7 @@
 <h2>Vegetable rows</h2>
 {% for r in rows %}
 <div class="row">
-  <span class="row-main"><strong>{{ r.vegetable_name }}</strong><small>{{ r.arrived_qty }} arrived | {{ r.sold_qty }} sold |{% if r.wasted_qty %} {{ r.wasted_qty }} wasted |{% endif %}
+  <span class="row-main"><strong>{{ r.vegetable_name }}</strong><small>{{ r.arrived_qty }} arrived | {{ r.sold_qty }} sold{% if r.returned_qty %} ({{ r.returned_qty }} returned){% endif %} |{% if r.wasted_qty %} {{ r.wasted_qty }} wasted |{% endif %}
       <span class="{{ 'neg' if r.stock_left < 0 }}">{{ r.stock_left }} left</span></small>
     {% if r.stock_left < 0 %}<small class="neg">Sold more than arrived. Edit the arrival count if it was entered wrongly.</small>{% endif %}
   </span>
