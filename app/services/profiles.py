@@ -162,6 +162,15 @@ def usage_blockers(cfg: dict, profile_id: int) -> list[str]:
             problems.append(f"This {cfg['singular']} is used by {len(trips)} "
                             f"trip{'s' if len(trips) != 1 else ''} ({names}). "
                             f"Edit or hide those trips first.")
+    if key == "farm-owners":
+        money = query(
+            "SELECT (SELECT count(*) FROM farm_owner_costs WHERE farm_owner_id = %s AND is_deleted = false)"
+            " + (SELECT count(*) FROM farm_owner_payments WHERE farm_owner_id = %s AND is_deleted = false)"
+            " + (SELECT count(*) FROM opening_balances WHERE farm_owner_id = %s AND is_deleted = false) AS n",
+            [profile_id] * 3)[0]["n"]
+        if money:
+            problems.append(f"This farm owner has {money} money entr{'ies' if money != 1 else 'y'} "
+                            f"(extra costs, payments or opening balances). Hide those first.")
     if key == "vehicles":
         used = query(
             "SELECT (SELECT count(*) FROM stock_moves WHERE is_deleted = false "

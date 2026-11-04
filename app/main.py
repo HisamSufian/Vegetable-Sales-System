@@ -9,8 +9,8 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.auth import NotLoggedIn
 from app.config import settings
 from app.db import pool
-from app.routers import (bills, health, pages, pickers, profiles, returns, sales, settings_page,
-                         stock, trips)
+from app.routers import (bills, farm_money, health, pages, pickers, profiles, returns, sales,
+                         settings_page, settlement, stock, trips)
 
 BASE_DIR = Path(__file__).parent
 
@@ -50,5 +50,7 @@ app.include_router(sales.router)
 app.include_router(trips.router)
 app.include_router(bills.router)
 app.include_router(returns.router)
+app.include_router(settlement.router)
+app.include_router(farm_money.router)
 app.include_router(stock.router)
 app.include_router(settings_page.router)

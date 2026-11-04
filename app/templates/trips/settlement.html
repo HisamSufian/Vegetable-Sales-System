@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Settlement {{ trip.trip_no }}{% endblock %}
+{% block content %}
+<p><a href="/trips/{{ trip.id }}">&larr; {{ trip.trip_no }}</a></p>
+<div class="card">
+  <h1>Settlement {{ trip.trip_no }}
+    <span class="badge {{ 'open' if trip.status != 'settled' }}">{{ trip.status|replace("_", " ")|capitalize }}</span></h1>
+  <p><strong><a href="/profiles/farm-owners/{{ trip.farm_owner_id }}">{{ trip.farm_owner_name }}</a></strong>
+     | {{ trip.day_date|fdate }} | {{ trip.plate_number }}</p>
+  <p class="muted">Enter what you pay the farm owner for the cartons sold. The rate is your decision and
+  has nothing to do with the selling rate.</p>
+  {% if trip.status == "settled" %}
+  <form method="post" action="/trips/{{ trip.id }}/reopen">
+    <input type="hidden" name="next" value="settlement">
+    <button class="btn secondary" type="submit">Reopen trip</button>
+  </form>
+  {% else %}
+  <form method="post" action="/trips/{{ trip.id }}/settle">
+    <input type="hidden" name="next" value="settlement">
+    <button class="btn secondary" type="submit">Mark settled</button>
+  </form>
+  {% endif %}
+</div>
+
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+
+{% for r in rows %}
+<div class="card">
+  <h2>{{ r.vegetable_name }}</h2>
+  <p>{{ r.arrived_qty }} arrived | <strong>{{ r.net_sold }}</strong> sold (after returns)
+     {% if r.wasted_qty %}| {{ r.wasted_qty }} wasted (not paid){% endif %}<br>
+     Settled: <strong>{{ r.settled_qty }}</strong> |
+     To settle: <strong class="{{ 'pending-text' if r.remaining > 0 }}">{{ r.remaining if r.remaining > 0 else 0 }}</strong></p>
+  {% if r.over > 0 %}
+  <p class="neg">You settled {{ r.over }} more cartons than were sold (after returns). Please adjust the lines below.</p>
+  {% endif %}
+
+  {% for l in r.lines %}
+  <div class="row line">
+    <span class="row-main">
+      <strong>{{ l.qty }} @ {{ l.rate|money }} = {{ l.amount|money }}</strong>
+      <small>{{ l.line_date|fdate }}</small>
+    </span>
+    <span class="actions">
+      <a class="btn small secondary" href="/trips/{{ trip.id }}/settlement/lines/{{ l.id }}/edit">Edit</a>
+      <form method="post" action="/trips/{{ trip.id }}/settlement/lines/{{ l.id }}/hide"
+            onsubmit="return confirm('Hide this settlement line?');">
+        <button class="btn small danger" type="submit">Hide</button>
+      </form>
+    </span>
+  </div>
+  {% endfor %}
+  {% if r.lines %}<p><strong>Amount for {{ r.vegetable_name }}: {{ r.amount|money }} AED</strong></p>{% endif %}
+
+  <form method="post" action="/trips/{{ trip.id }}/settlement/lines" class="inline-form">
+    <input type="hidden" name="trip_row_id" value="{{ r.trip_row_id }}">
+    <input name="qty" type="number" inputmode="numeric" min="1" step="1"
+           value="{{ r.remaining if r.remaining > 0 else '' }}" placeholder="Cartons" aria-label="Cartons">
+    <input name="rate" type="text" inputmode="decimal" placeholder="Rate" aria-label="Rate">
+    <button class="btn small" type="submit">Add</button>
+  </form>
+</div>
+{% else %}
+<p class="muted">This trip has no vegetable rows yet.</p>
+{% endfor %}
+
+<h2>Extra costs on this trip</h2>
+{% for c in costs %}
+<div class="row">
+  <span class="row-main">
+    <strong>{{ c.amount|money }} AED | {{ "Farm owner bears" if c.borne_by == "farm_owner" else "I bear" }}</strong>
+    <small>{{ c.cost_date|fdate }}{% if c.note %} | {{ c.note }}{% endif %}</small>
+  </span>
+  <a class="btn small secondary" href="/farms/{{ trip.farm_owner_id }}/costs/{{ c.id }}/edit">Edit</a>
+</div>
+{% else %}
+<p class="muted">No extra costs linked to this trip.</p>
+{% endfor %}
+<a class="btn secondary" href="/farms/{{ trip.farm_owner_id }}/costs/new?trip_id={{ trip.id }}">+ Add extra cost</a>
+
+<div class="card totals">
+  <div><span>Settled amount</span><span>{{ settled_amount|money }}</span></div>
+  <div><span>Costs the farm owner bears</span><span>- {{ owner_costs|money }}</span></div>
+  <div class="grand"><span>Net for this trip (AED)</span><span>{{ net|money }}</span></div>
+  {% if my_costs %}<p class="muted">Costs I bear myself (not deducted): {{ my_costs|money }}</p>{% endif %}
+  <p class="muted">Payments are made against the farm owner overall, on the farm owner's profile.</p>
+</div>
+{% endblock %}

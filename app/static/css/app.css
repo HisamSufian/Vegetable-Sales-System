@@ -95,3 +95,12 @@ textarea { width: 100%; }
 .row .actions { flex-wrap: wrap; }
 .ret { color: #1f6b34; }
 .ret a { margin-left: 6px; }
+
+/* Phase 6 */
+select { width: 100%; min-height: 48px; padding: 10px 12px; font-size: 16px; border: 1px solid #b9c4b9;
+         border-radius: 8px; background: #fff; font-family: inherit; }
+.big { font-size: 1.8rem; font-weight: 700; margin: 4px 0; }
+.balance-pos { color: #1f6b34; }
+.balance-neg { color: #b42318; }
+.mini-form { display: inline; margin: 0; }
+.mini-form .btn { margin: 0; }

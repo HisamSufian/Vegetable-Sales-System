@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Edit settlement line{% endblock %}
+{% block content %}
+<p><a href="/trips/{{ trip.id }}/settlement">&larr; Settlement {{ trip.trip_no }}</a></p>
+<h1>Edit settlement line</h1>
+<div class="card">
+  <p><strong>{{ row.vegetable_name }}</strong> | {{ trip.trip_no }}<br>
+     Sold (after returns): {{ row.net_sold }}</p>
+</div>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="/trips/{{ trip.id }}/settlement/lines/{{ line.id }}/edit" class="card">
+  <label for="qty">Cartons *</label>
+  <input id="qty" name="qty" type="number" inputmode="numeric" min="1" step="1" value="{{ v.qty_text }}" required autofocus>
+  <label for="rate">Rate per carton (AED) *</label>
+  <input id="rate" name="rate" type="text" inputmode="decimal" value="{{ v.rate_text }}" required>
+  <label for="line_date">Date</label>
+  <input id="line_date" name="line_date" type="date" value="{{ v.date_text }}" required>
+  <button class="btn" type="submit">Save</button>
+  <a class="btn secondary" href="/trips/{{ trip.id }}/settlement">Cancel</a>
+</form>
+{% endblock %}

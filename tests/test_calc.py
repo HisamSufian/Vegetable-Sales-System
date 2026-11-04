@@ -2,7 +2,8 @@
 import unittest
 from decimal import Decimal
 
-from app.services.calc import bill_totals, line_amount, parse_money, parse_signed_int
+from app.services.calc import (bill_totals, farm_balance, line_amount, parse_money,
+                               parse_signed_int, parse_signed_money)
 
 
 class LineAndBillTests(unittest.TestCase):
@@ -47,6 +48,39 @@ class ReturnTests(unittest.TestCase):
         totals = bill_totals([{"qty": 2, "rate": Decimal("15")}], Decimal("0"))
         self.assertEqual(totals["returns_credit"], Decimal("0.00"))
         self.assertEqual(totals["total"], Decimal("30.00"))
+
+
+class FarmBalanceTests(unittest.TestCase):
+    def test_settlement_costs_and_payments(self):
+        settled = line_amount(20, Decimal("18"))                  # Tomato 20 at 18 = 360
+        balance = farm_balance(settled, Decimal("0"), Decimal("200"), Decimal("100"))
+        self.assertEqual(balance, Decimal("60.00"))               # I owe him 60
+
+    def test_advance_makes_the_balance_negative(self):
+        balance = farm_balance(Decimal("360"), Decimal("0"), Decimal("200"), Decimal("600"))
+        self.assertEqual(balance, Decimal("-440"))                # he owes me 440
+
+    def test_opening_balance_is_added(self):
+        self.assertEqual(farm_balance(Decimal("0"), Decimal("1000"), Decimal("0"), Decimal("0")), Decimal("1000"))
+        self.assertEqual(farm_balance(Decimal("0"), Decimal("-200"), Decimal("0"), Decimal("0")), Decimal("-200"))
+
+    def test_several_settlement_rates_for_one_row(self):
+        total = (line_amount(50, Decimal("18")) + line_amount(30, Decimal("17"))
+                 + line_amount(20, Decimal("15")))
+        self.assertEqual(total, Decimal("1710.00"))               # 900 + 510 + 300
+
+
+class SignedMoneyTests(unittest.TestCase):
+    def test_valid(self):
+        self.assertEqual(parse_signed_money("1000"), (Decimal("1000.00"), None))
+        self.assertEqual(parse_signed_money("-200"), (Decimal("-200.00"), None))
+        self.assertEqual(parse_signed_money("+50.5"), (Decimal("50.50"), None))
+
+    def test_invalid(self):
+        for bad in ("", "0", "abc", "--5", "1.234"):
+            value, error = parse_signed_money(bad)
+            self.assertIsNone(value, bad)
+            self.assertTrue(error, bad)
 
 
 class ParseMoneyTests(unittest.TestCase):

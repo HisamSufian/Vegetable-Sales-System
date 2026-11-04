@@ -37,6 +37,99 @@
 <p class="muted">No bills yet.</p>
 {% endfor %}
 <div class="card muted">Payments, cheques and the balance will appear here in a later phase.</div>
+{% elif kind == "farm-owners" %}
+<div class="card">
+  <h2>Balance</h2>
+  <p class="big {{ 'balance-neg' if fm.balance < 0 else 'balance-pos' }}">{{ fm.balance|money }} AED</p>
+  <p>{% if fm.balance > 0 %}I owe {{ row.label }} this amount.{% elif fm.balance < 0 %}{{ row.label }} owes me this amount (advance paid).{% else %}All settled up.{% endif %}</p>
+  <div class="totals">
+    <div><span>Settled amounts (all trips)</span><span>{{ fm.settled|money }}</span></div>
+    <div><span>Opening balance</span><span>{{ fm.opening|money }}</span></div>
+    <div><span>Extra costs he bears</span><span>- {{ fm.costs_owner|money }}</span></div>
+    <div><span>Payments (cleared)</span><span>- {{ fm.paid|money }}</span></div>
+  </div>
+  {% if fm.cheques_pending_count %}
+  <p class="pending-text">Cheques I issued, pending: {{ fm.cheques_pending_count }} ({{ fm.cheques_pending_total|money }} AED). Not counted until cleared.</p>
+  {% endif %}
+  {% if fm.costs_me %}<p class="muted">Costs I bear myself (not deducted from him): {{ fm.costs_me|money }} AED</p>{% endif %}
+</div>
+<div class="btn-row">
+  <a class="btn small" href="/farms/{{ row.id }}/payments/new">+ Payment</a>
+  <a class="btn small" href="/farms/{{ row.id }}/costs/new">+ Extra cost</a>
+  <a class="btn small secondary" href="/farms/{{ row.id }}/opening/new">+ Opening balance</a>
+</div>
+
+<h2>Trips</h2>
+{% for t in fm.trips %}
+<a class="row" href="/trips/{{ t.id }}/settlement">
+  <span class="row-main"><strong>{{ t.trip_no }} | {{ t.plate_number }}</strong>
+    <small>{{ t.day_date|fdate }} | {{ t.status|replace("_", " ")|capitalize }}</small></span>
+  <span class="count">{{ t.settled_amount|money }}</span>
+</a>
+{% else %}<p class="muted">No trips yet.</p>{% endfor %}
+
+<h2>Payments</h2>
+{% for p in fm.payments %}
+<div class="row line">
+  <span class="row-main">
+    <strong>{{ p.amount|money }} AED | {{ fm.method_labels[p.method] }}</strong>
+    <small>{{ p.pay_date|fdate }}{% if p.note %} | {{ p.note }}{% endif %}</small>
+    {% if p.method == "cheque" %}
+    <small>Cheque {{ p.cheque_no }}{% if p.bank %} | {{ p.bank }}{% endif %} | due {{ p.due_date|fdate }} |
+      <span class="{{ 'pending-text' if p.cheque_status == 'pending' else ('neg' if p.cheque_status == 'bounced' else 'ok') }}">{{ p.cheque_status|capitalize }}</span></small>
+    {% endif %}
+  </span>
+  <span class="actions">
+    {% if p.method == "cheque" %}
+      {% for s in ["pending", "cleared", "bounced"] if s != p.cheque_status %}
+      <form method="post" action="/farms/{{ row.id }}/payments/{{ p.id }}/status" class="mini-form">
+        <input type="hidden" name="status" value="{{ s }}">
+        <button class="btn small secondary" type="submit">{{ s|capitalize }}</button>
+      </form>
+      {% endfor %}
+    {% endif %}
+    <a class="btn small secondary" href="/farms/{{ row.id }}/payments/{{ p.id }}/edit">Edit</a>
+    <form method="post" action="/farms/{{ row.id }}/payments/{{ p.id }}/hide" class="mini-form"
+          onsubmit="return confirm('Hide this payment?');">
+      <button class="btn small danger" type="submit">Hide</button>
+    </form>
+  </span>
+</div>
+{% else %}<p class="muted">No payments yet.</p>{% endfor %}
+
+<h2>Extra costs</h2>
+{% for c in fm.costs %}
+<div class="row line">
+  <span class="row-main">
+    <strong>{{ c.amount|money }} AED | {{ "Farm owner bears" if c.borne_by == "farm_owner" else "I bear" }}</strong>
+    <small>{{ c.cost_date|fdate }}{% if c.trip_no %} | {{ c.trip_no }}{% endif %}{% if c.note %} | {{ c.note }}{% endif %}</small>
+  </span>
+  <span class="actions">
+    <a class="btn small secondary" href="/farms/{{ row.id }}/costs/{{ c.id }}/edit">Edit</a>
+    <form method="post" action="/farms/{{ row.id }}/costs/{{ c.id }}/hide" class="mini-form"
+          onsubmit="return confirm('Hide this cost?');">
+      <button class="btn small danger" type="submit">Hide</button>
+    </form>
+  </span>
+</div>
+{% else %}<p class="muted">No extra costs yet.</p>{% endfor %}
+
+<h2>Opening balances</h2>
+{% for o in fm.openings %}
+<div class="row line">
+  <span class="row-main">
+    <strong>{{ o.amount|money }} AED | {{ "I owe him" if o.amount > 0 else "He owes me" }}</strong>
+    <small>{{ o.balance_date|fdate }}{% if o.note %} | {{ o.note }}{% endif %}</small>
+  </span>
+  <span class="actions">
+    <a class="btn small secondary" href="/farms/{{ row.id }}/opening/{{ o.id }}/edit">Edit</a>
+    <form method="post" action="/farms/{{ row.id }}/opening/{{ o.id }}/hide" class="mini-form"
+          onsubmit="return confirm('Hide this opening balance?');">
+      <button class="btn small danger" type="submit">Hide</button>
+    </form>
+  </span>
+</div>
+{% else %}<p class="muted">None.</p>{% endfor %}
 {% else %}
 <div class="card muted">Trips, bills, payments and balance will appear here in later phases.</div>
 {% endif %}

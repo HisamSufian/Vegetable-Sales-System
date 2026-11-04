@@ -12,6 +12,7 @@
     <dt>Day</dt><dd>{{ trip.day_date|fdate }}</dd>
     {% if trip.note %}<dt>Note</dt><dd>{{ trip.note }}</dd>{% endif %}
   </dl>
+  <a class="btn" href="/trips/{{ trip.id }}/settlement">Settlement (farm owner bill)</a>
   <a class="btn secondary" href="/trips/{{ trip.id }}/edit">Edit trip</a>
   {% if trip.status == "settled" %}
   <form method="post" action="/trips/{{ trip.id }}/reopen">

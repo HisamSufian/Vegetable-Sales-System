@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Mark settled{% endblock %}
+{% block content %}
+<p><a href="/trips/{{ trip.id }}/settlement">&larr; Settlement {{ trip.trip_no }}</a></p>
+<h1>Mark {{ trip.trip_no }} as settled?</h1>
+{% if p.unsettled %}
+<p class="warn-box">These cartons were sold but are not in the settlement yet:</p>
+{% for r in p.unsettled %}
+<div class="row"><span class="row-main"><strong>{{ r.vegetable_name }}</strong>
+  <small>{{ r.remaining }} cartons not settled (sold {{ r.net_sold }}, settled {{ r.settled_qty }})</small></span></div>
+{% endfor %}
+{% endif %}
+{% if p.over %}
+<p class="warn-box">These rows have more cartons settled than sold (after returns):</p>
+{% for r in p.over %}
+<div class="row"><span class="row-main"><strong>{{ r.vegetable_name }}</strong>
+  <small>{{ r.over }} too many (sold {{ r.net_sold }}, settled {{ r.settled_qty }})</small></span></div>
+{% endfor %}
+{% endif %}
+<form method="post" action="/trips/{{ trip.id }}/settle">
+  <input type="hidden" name="confirm" value="1">
+  <input type="hidden" name="next" value="{{ next }}">
+  <button class="btn secondary" type="submit">Mark settled anyway</button>
+</form>
+<a class="btn" href="/trips/{{ trip.id }}/settlement">Back to the settlement</a>
+{% endblock %}

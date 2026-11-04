@@ -121,8 +121,7 @@ def _stock_entry_count(where_row: str, param: int) -> int:
 
 
 def trip_blockers(trip_id: int) -> list[str]:
-    """Reasons a trip cannot be hidden, for example 'This trip has 12 sale lines'.
-    Phase 6 (settlements) adds more checks."""
+    """Reasons a trip cannot be hidden, for example 'This trip has 12 sale lines'."""
     problems = []
     lines = query("SELECT count(*) AS n FROM sale_lines l "
                   "JOIN sale_bills b ON b.id = l.bill_id JOIN trip_rows r ON r.id = l.trip_row_id "
@@ -135,6 +134,16 @@ def trip_blockers(trip_id: int) -> list[str]:
     if entries:
         problems.append(f"This trip has {entries} stock entr{'ies' if entries != 1 else 'y'} "
                         f"(moves, wastage or corrections). Hide those first.")
+    settled = query("SELECT count(*) AS n FROM settlement_lines sl JOIN trip_rows r ON r.id = sl.trip_row_id "
+                    "WHERE r.trip_id = %s AND sl.is_deleted = false", [trip_id])[0]["n"]
+    if settled:
+        problems.append(f"This trip has {settled} settlement line{'s' if settled != 1 else ''}. "
+                        f"Hide those first.")
+    costs = query("SELECT count(*) AS n FROM farm_owner_costs WHERE trip_id = %s AND is_deleted = false",
+                  [trip_id])[0]["n"]
+    if costs:
+        problems.append(f"This trip has {costs} extra cost{'s' if costs != 1 else ''} linked to it. "
+                        f"Hide or unlink those first.")
     return problems
 
 
@@ -241,6 +250,11 @@ def row_blockers(row_id: int) -> list[str]:
     if entries:
         problems.append(f"This row has {entries} stock entr{'ies' if entries != 1 else 'y'} "
                         f"(moves, wastage or corrections). Hide those first.")
+    settled = query("SELECT count(*) AS n FROM settlement_lines WHERE trip_row_id = %s AND is_deleted = false",
+                    [row_id])[0]["n"]
+    if settled:
+        problems.append(f"This row has {settled} settlement line{'s' if settled != 1 else ''}. "
+                        f"Hide those first.")
     return problems
 
 

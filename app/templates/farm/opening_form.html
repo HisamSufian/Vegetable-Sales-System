@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<p><a href="/profiles/farm-owners/{{ owner.id }}">&larr; {{ owner.label }}</a></p>
+<h1>{{ heading }}</h1>
+<p class="muted">An old debt from before you started using the system. Enter a <strong>positive</strong> amount
+if you owe {{ owner.label }}, or a <strong>negative</strong> amount (like -200) if he owes you.</p>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="{{ action }}" class="card">
+  <label for="amount">Amount (AED) *</label>
+  <input id="amount" name="amount" type="text" inputmode="text" value="{{ v.amount_text }}" placeholder="e.g. 1000 or -200" autofocus>
+  <label for="balance_date">Date</label>
+  <input id="balance_date" name="balance_date" type="date" value="{{ v.date_text }}" required>
+  <label for="note">Note (optional)</label>
+  <textarea id="note" name="note" rows="2">{{ v.note_text }}</textarea>
+  <button class="btn" type="submit">Save</button>
+  <a class="btn secondary" href="/profiles/farm-owners/{{ owner.id }}">Cancel</a>
+</form>
+{% endblock %}

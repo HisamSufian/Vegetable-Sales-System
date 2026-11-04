@@ -5,6 +5,7 @@ from fastapi.responses import RedirectResponse
 from app.auth import require_login
 from app.deps import form_data
 from app.services.days import get_day
+from app.services.settlement import settle_problems
 from app.services.profiles import UniqueViolation
 from app.services.trips import (
     add_row, check_choices, check_row_form, create_trip, get_row, get_trip, hide_row, hide_trip,
@@ -114,18 +115,30 @@ def hide(request: Request, trip_id: int):
     return RedirectResponse(f"/sales/day/{trip['day_id']}", status_code=303)
 
 
+def _after_status(trip_id: int, next_page: str) -> RedirectResponse:
+    target = f"/trips/{trip_id}/settlement" if next_page == "settlement" else f"/trips/{trip_id}"
+    return RedirectResponse(target, status_code=303)
+
+
 @router.post("/trips/{trip_id:int}/settle")
-def mark_settled(trip_id: int):
-    _trip_or_404(trip_id)
+def mark_settled(request: Request, trip_id: int, form: dict = Depends(form_data)):
+    """Warns about cartons sold but not settled (or settled too much), but never blocks:
+    'Mark settled anyway' always works."""
+    trip = _trip_or_404(trip_id)
+    if not form.get("confirm"):
+        problems = settle_problems(trip_id)
+        if problems["unsettled"] or problems["over"]:
+            return templates.TemplateResponse(request, "trips/settle_warning.html", {
+                "trip": trip, "p": problems, "next": form.get("next", "")})
     set_trip_status(trip_id, "settled")
-    return RedirectResponse(f"/trips/{trip_id}", status_code=303)
+    return _after_status(trip_id, form.get("next", ""))
 
 
 @router.post("/trips/{trip_id:int}/reopen")
-def reopen(trip_id: int):
+def reopen(trip_id: int, form: dict = Depends(form_data)):
     _trip_or_404(trip_id)
     set_trip_status(trip_id, "open")
-    return RedirectResponse(f"/trips/{trip_id}", status_code=303)
+    return _after_status(trip_id, form.get("next", ""))
 
 
 # ---------------- vegetable rows ----------------

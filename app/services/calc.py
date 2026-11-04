@@ -57,3 +57,27 @@ def parse_signed_int(text) -> int | None:
     if re.fullmatch(r"[+-]?\d{1,9}", cleaned):
         return int(cleaned)
     return None
+
+
+def farm_balance(settled: Decimal, opening: Decimal, costs_borne_by_owner: Decimal, payments: Decimal) -> Decimal:
+    """What I owe a farm owner (negative = he owes me, for example an advance):
+    settled amounts + opening balance - extra costs he bears - payments (cleared)."""
+    return settled + opening - costs_borne_by_owner - payments
+
+
+def parse_signed_money(text) -> tuple[Decimal | None, str | None]:
+    """Like parse_money but a leading + or - is allowed, and 0 is not."""
+    cleaned = (text or "").strip().replace(",", "").replace(" ", "")
+    sign = Decimal(1)
+    if cleaned.startswith("-"):
+        sign, cleaned = Decimal(-1), cleaned[1:]
+    elif cleaned.startswith("+"):
+        cleaned = cleaned[1:]
+    value, error = parse_money(cleaned, blank=None)
+    if error:
+        return None, error
+    if value is None:
+        return None, "Enter an amount like 1000 or -200."
+    if value == 0:
+        return None, "The amount cannot be 0."
+    return (value * sign).quantize(CENTS), None

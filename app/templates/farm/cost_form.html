@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<p><a href="/profiles/farm-owners/{{ owner.id }}">&larr; {{ owner.label }}</a></p>
+<h1>{{ heading }}</h1>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="{{ action }}" class="card">
+  <input type="hidden" name="next" value="{{ 'settlement' if v.trip_id else '' }}">
+  <label for="amount">Amount (AED) *</label>
+  <input id="amount" name="amount" type="text" inputmode="decimal" value="{{ v.amount_text }}" autofocus>
+
+  <label>Who bears this cost? *</label>
+  <label class="check"><input type="radio" name="borne_by" value="farm_owner" {% if v.borne_by == "farm_owner" %}checked{% endif %}>
+    Farm owner (deducted from his balance)</label>
+  <label class="check"><input type="radio" name="borne_by" value="me" {% if v.borne_by == "me" %}checked{% endif %}>
+    Me (my business expense, not deducted from him)</label>
+
+  <label for="cost_date">Date</label>
+  <input id="cost_date" name="cost_date" type="date" value="{{ v.date_text }}" required>
+
+  <label for="trip_id">Linked trip (optional)</label>
+  <select id="trip_id" name="trip_id">
+    <option value="">None (just the farm owner)</option>
+    {% for t in trips %}<option value="{{ t.id }}" {% if v.trip_id|string == t.id|string %}selected{% endif %}>{{ t.trip_no }} | {{ t.day_date|fdate }}</option>{% endfor %}
+  </select>
+
+  <label for="note">Note (e.g. packing cartons, driver fee, parking rent)</label>
+  <textarea id="note" name="note" rows="2">{{ v.note_text }}</textarea>
+
+  <button class="btn" type="submit">Save</button>
+  <a class="btn secondary" href="/profiles/farm-owners/{{ owner.id }}">Cancel</a>
+</form>
+{% endblock %}
