@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<p><a href="/profiles/customers/{{ customer.id }}">&larr; {{ customer.label }}</a></p>
+<h1>{{ heading }}</h1>
+<p class="muted">A payment goes against {{ customer.label }}'s total balance, not a specific bill.</p>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="{{ action }}" class="card">
+  <label for="amount">Amount (AED) *</label>
+  <input id="amount" name="amount" type="text" inputmode="decimal" value="{{ v.amount_text }}" autofocus>
+
+  <label for="method">Paid by *</label>
+  <select id="method" name="method">
+    {% for m in methods %}<option value="{{ m }}" {% if v.method == m %}selected{% endif %}>{{ m|capitalize }}</option>{% endfor %}
+  </select>
+
+  <label for="pay_date">Date received</label>
+  <input id="pay_date" name="pay_date" type="date" value="{{ v.date_text }}" required>
+
+  <label for="note">Note (optional)</label>
+  <textarea id="note" name="note" rows="2">{{ v.note_text }}</textarea>
+
+  <h2>Cheque details</h2>
+  <p class="muted">Fill these only when "Paid by" is Cheque. A post-dated cheque stays "in hand" and is
+  counted as received only when you mark it Cleared.</p>
+  <label for="cheque_no">Cheque number</label>
+  <input id="cheque_no" name="cheque_no" value="{{ v.cheque_no_text }}">
+  <label for="bank">Bank (optional)</label>
+  <input id="bank" name="bank" value="{{ v.bank_text }}">
+  <label for="due_date">Due date</label>
+  <input id="due_date" name="due_date" type="date" value="{{ v.due_text }}">
+  <label for="cheque_status">Cheque status</label>
+  <select id="cheque_status" name="cheque_status">
+    {% for s in statuses %}<option value="{{ s }}" {% if v.status == s %}selected{% endif %}>{{ s|capitalize }}</option>{% endfor %}
+  </select>
+
+  <button class="btn" type="submit">Save payment</button>
+  <a class="btn secondary" href="/profiles/customers/{{ customer.id }}">Cancel</a>
+</form>
+{% endblock %}

@@ -2,8 +2,8 @@
 import unittest
 from decimal import Decimal
 
-from app.services.calc import (bill_totals, farm_balance, line_amount, parse_money,
-                               parse_signed_int, parse_signed_money)
+from app.services.calc import (bill_totals, customer_balance, farm_balance, line_amount,
+                               parse_money, parse_signed_int, parse_signed_money)
 
 
 class LineAndBillTests(unittest.TestCase):
@@ -68,6 +68,29 @@ class FarmBalanceTests(unittest.TestCase):
         total = (line_amount(50, Decimal("18")) + line_amount(30, Decimal("17"))
                  + line_amount(20, Decimal("15")))
         self.assertEqual(total, Decimal("1710.00"))               # 900 + 510 + 300
+
+
+class CustomerBalanceTests(unittest.TestCase):
+    def test_dinesh_bill_return_and_payment(self):
+        bill = bill_totals([{"qty": 20, "rate": Decimal("23")}], Decimal("0"),
+                           [{"qty": 5, "credit_rate": Decimal("23")}])["total"]      # 460 - 115 = 345
+        self.assertEqual(customer_balance(bill, Decimal("0"), Decimal("100"), Decimal("0")), Decimal("245"))
+
+    def test_opening_and_writeoff(self):
+        self.assertEqual(customer_balance(Decimal("345"), Decimal("500"), Decimal("100"), Decimal("20")),
+                         Decimal("725"))
+
+    def test_overpayment_is_negative(self):
+        self.assertEqual(customer_balance(Decimal("345"), Decimal("0"), Decimal("400"), Decimal("0")),
+                         Decimal("-55"))
+
+    def test_pending_cheque_is_simply_not_in_the_payments_total(self):
+        # the service only sums non-cheque payments and CLEARED cheques; so a pending 200 cheque
+        # leaves the balance as if it had not been given yet
+        self.assertEqual(customer_balance(Decimal("345"), Decimal("0"), Decimal("100"), Decimal("0")),
+                         Decimal("245"))
+        self.assertEqual(customer_balance(Decimal("345"), Decimal("0"), Decimal("300"), Decimal("0")),
+                         Decimal("45"))   # after the 200 cheque clears
 
 
 class SignedMoneyTests(unittest.TestCase):

@@ -197,6 +197,14 @@ def usage_blockers(cfg: dict, profile_id: int) -> list[str]:
             names = ", ".join(b["bill_no"] for b in bills[:6]) + (", ..." if len(bills) > 6 else "")
             problems.append(f"This customer has {len(bills)} bill{'s' if len(bills) != 1 else ''} "
                             f"({names}). Hide those bills first.")
+        money = query(
+            "SELECT (SELECT count(*) FROM customer_payments WHERE customer_id = %s AND is_deleted = false)"
+            " + (SELECT count(*) FROM customer_adjustments WHERE customer_id = %s AND is_deleted = false)"
+            " + (SELECT count(*) FROM opening_balances WHERE customer_id = %s AND is_deleted = false) AS n",
+            [profile_id] * 3)[0]["n"]
+        if money:
+            problems.append(f"This customer has {money} money entr{'ies' if money != 1 else 'y'} "
+                            f"(payments, write-offs or opening balances). Hide those first.")
     return problems
 
 

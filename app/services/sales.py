@@ -82,10 +82,15 @@ def bills_for_day(day_id: int) -> list[dict]:
                                 [day_id]))
 
 
-def bills_for_customer(customer_id: int) -> list[dict]:
-    """A customer's bills, newest first (for the customer profile)."""
-    return _attach_totals(query(BILL_SELECT + " WHERE b.customer_id = %s AND b.is_deleted = false "
-                                "ORDER BY d.day_date DESC, b.id DESC LIMIT 100", [customer_id]))
+def bills_for_customer(customer_id: int, limit: int | None = 100) -> list[dict]:
+    """A customer's bills, newest first. limit=None returns all of them."""
+    sql = (BILL_SELECT + " WHERE b.customer_id = %s AND b.is_deleted = false "
+           "ORDER BY d.day_date DESC, b.id DESC")
+    params: list = [customer_id]
+    if limit:
+        sql += " LIMIT %s"
+        params.append(limit)
+    return _attach_totals(query(sql, params))
 
 
 def update_bill_details(bill_id: int, discount: Decimal, note: str | None) -> None:

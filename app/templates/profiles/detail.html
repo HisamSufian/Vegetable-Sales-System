@@ -27,8 +27,40 @@
   {% endif %}
 </div>
 {% if kind == "customers" %}
+{% if row.is_walk_in %}
+<div class="card">
+  <h2>Cash sales</h2>
+  <p class="big balance-pos">{{ cm.bills_total|money }} AED</p>
+  <p>Every Walk-in / Cash sale is paid on the spot, so it counts as received automatically.
+     This customer never has a balance.</p>
+</div>
+{% else %}
+<div class="card">
+  <h2>Balance</h2>
+  <p class="big {{ 'balance-neg' if cm.balance > 0 else 'balance-pos' }}">{{ cm.balance|money }} AED</p>
+  <p>{% if cm.balance > 0 %}{{ row.label }} owes me this amount.{% elif cm.balance < 0 %}I owe {{ row.label }} this amount (overpaid).{% else %}All settled up.{% endif %}</p>
+  <div class="totals">
+    <div><span>Bills (after returns and discounts)</span><span>{{ cm.bills_total|money }}</span></div>
+    <div><span>Opening balance</span><span>{{ cm.opening|money }}</span></div>
+    <div><span>Payments received (cleared)</span><span>- {{ cm.paid|money }}</span></div>
+    <div><span>Write-offs</span><span>- {{ cm.writeoffs|money }}</span></div>
+  </div>
+  {% if cm.cheques_pending_count %}
+  <p class="pending-text">Cheques in hand: {{ cm.cheques_pending_count }} ({{ cm.cheques_pending_total|money }} AED). Not counted as received until cleared.</p>
+  {% endif %}
+  {% if cm.bounced_count %}
+  <p class="neg">Bounced cheques: {{ cm.bounced_count }} ({{ cm.bounced_total|money }} AED). They are back in the balance.</p>
+  {% endif %}
+</div>
+<div class="btn-row">
+  <a class="btn small" href="/customers/{{ row.id }}/payments/new">+ Payment</a>
+  <a class="btn small secondary" href="/customers/{{ row.id }}/writeoffs/new">+ Write-off</a>
+  <a class="btn small secondary" href="/customers/{{ row.id }}/opening/new">+ Opening balance</a>
+</div>
+{% endif %}
+
 <h2>Bills</h2>
-{% for b in bills %}
+{% for b in cm.bills %}
 <a class="row" href="/bills/{{ b.id }}">
   <span class="row-main"><strong>{{ b.bill_no }}</strong><small>{{ b.day_date|fdate }}</small></span>
   <span class="count">{{ b.totals.total|money }}</span>
@@ -36,7 +68,79 @@
 {% else %}
 <p class="muted">No bills yet.</p>
 {% endfor %}
-<div class="card muted">Payments, cheques and the balance will appear here in a later phase.</div>
+
+{% if not row.is_walk_in %}
+<h2>Returns</h2>
+{% for r in cm.returns %}
+<a class="row" href="/bills/{{ r.bill_id }}">
+  <span class="row-main"><strong>{{ r.qty }} {{ r.vegetable_name }}</strong>
+    <small>{{ r.return_date|fdate }} | {{ r.bill_no }}</small></span>
+  <span class="count">- {{ r.credit_amount|money }}</span>
+</a>
+{% else %}<p class="muted">No returns.</p>{% endfor %}
+
+<h2>Payments and cheques</h2>
+{% for p in cm.payments %}
+<div class="row line">
+  <span class="row-main">
+    <strong>{{ p.amount|money }} AED | {{ cm.method_labels[p.method] }}</strong>
+    <small>{{ p.pay_date|fdate }}{% if p.note %} | {{ p.note }}{% endif %}</small>
+    {% if p.method == "cheque" %}
+    <small>Cheque {{ p.cheque_no }}{% if p.bank %} | {{ p.bank }}{% endif %} | due {{ p.due_date|fdate }} |
+      <span class="{{ 'pending-text' if p.cheque_status == 'pending' else ('neg' if p.cheque_status == 'bounced' else 'ok') }}">{{ p.cheque_status|capitalize }}</span>
+      {% if p.overdue %}<span class="neg"> | due date has passed</span>{% endif %}</small>
+    {% endif %}
+  </span>
+  <span class="actions">
+    {% if p.method == "cheque" %}
+      {% for s in ["pending", "cleared", "bounced"] if s != p.cheque_status %}
+      <form method="post" action="/customers/{{ row.id }}/payments/{{ p.id }}/status" class="mini-form">
+        <input type="hidden" name="status" value="{{ s }}">
+        <button class="btn small secondary" type="submit">{{ s|capitalize }}</button>
+      </form>
+      {% endfor %}
+    {% endif %}
+    <a class="btn small secondary" href="/customers/{{ row.id }}/payments/{{ p.id }}/edit">Edit</a>
+    <form method="post" action="/customers/{{ row.id }}/payments/{{ p.id }}/hide" class="mini-form"
+          onsubmit="return confirm('Hide this payment?');">
+      <button class="btn small danger" type="submit">Hide</button>
+    </form>
+  </span>
+</div>
+{% else %}<p class="muted">No payments yet.</p>{% endfor %}
+
+<h2>Write-offs</h2>
+{% for w in cm.writeoff_list %}
+<div class="row line">
+  <span class="row-main"><strong>{{ w.amount|money }} AED</strong>
+    <small>{{ w.adj_date|fdate }} | {{ w.reason }}</small></span>
+  <span class="actions">
+    <a class="btn small secondary" href="/customers/{{ row.id }}/writeoffs/{{ w.id }}/edit">Edit</a>
+    <form method="post" action="/customers/{{ row.id }}/writeoffs/{{ w.id }}/hide" class="mini-form"
+          onsubmit="return confirm('Hide this write-off?');">
+      <button class="btn small danger" type="submit">Hide</button>
+    </form>
+  </span>
+</div>
+{% else %}<p class="muted">None.</p>{% endfor %}
+
+<h2>Opening balances</h2>
+{% for o in cm.openings %}
+<div class="row line">
+  <span class="row-main">
+    <strong>{{ o.amount|money }} AED | {{ "He owes me" if o.amount > 0 else "I owe him" }}</strong>
+    <small>{{ o.balance_date|fdate }}{% if o.note %} | {{ o.note }}{% endif %}</small>
+  </span>
+  <span class="actions">
+    <a class="btn small secondary" href="/customers/{{ row.id }}/opening/{{ o.id }}/edit">Edit</a>
+    <form method="post" action="/customers/{{ row.id }}/opening/{{ o.id }}/hide" class="mini-form"
+          onsubmit="return confirm('Hide this opening balance?');">
+      <button class="btn small danger" type="submit">Hide</button>
+    </form>
+  </span>
+</div>
+{% else %}<p class="muted">None.</p>{% endfor %}
+{% endif %}
 {% elif kind == "farm-owners" %}
 <div class="card">
   <h2>Balance</h2>

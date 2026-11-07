@@ -81,3 +81,9 @@ def parse_signed_money(text) -> tuple[Decimal | None, str | None]:
     if value == 0:
         return None, "The amount cannot be 0."
     return (value * sign).quantize(CENTS), None
+
+
+def customer_balance(bills_total: Decimal, opening: Decimal, payments: Decimal, writeoffs: Decimal) -> Decimal:
+    """What a customer owes me (negative = I owe him, for example an overpayment):
+    bills (after returns and discounts) + opening balance - payments (cleared) - write-offs."""
+    return bills_total + opening - payments - writeoffs

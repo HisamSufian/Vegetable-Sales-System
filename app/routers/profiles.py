@@ -8,7 +8,7 @@ from app.services.profiles import (
     get_profile, list_profiles, set_hidden, update_profile, usage_blockers,
 )
 from app.services.farm_money import owner_page
-from app.services.sales import bills_for_customer
+from app.services.customer_money import customer_page
 from app.templating import templates
 from fastapi import HTTPException
 
@@ -26,7 +26,7 @@ def _load(kind: str, profile_id: int):
 def _detail(request: Request, kind: str, cfg: dict, row: dict, errors=None, status=200):
     context = {"kind": kind, "cfg": cfg, "row": row, "errors": errors or []}
     if kind == "customers":
-        context["bills"] = bills_for_customer(row["id"])
+        context["cm"] = customer_page(row["id"], bool(row["is_walk_in"]))
     if kind == "farm-owners":
         context["fm"] = owner_page(row["id"])
     return templates.TemplateResponse(request, "profiles/detail.html", context, status_code=status)
