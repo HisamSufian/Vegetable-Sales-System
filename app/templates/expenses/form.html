@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_picker.html" import picker %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<p><a href="/expenses">&larr; Expenses</a></p>
+<h1>{{ heading }}</h1>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+<form method="post" action="{{ action }}" class="card">
+  <label for="amount">Amount (AED) *</label>
+  <input id="amount" name="amount" type="text" inputmode="decimal" value="{{ v.amount_text }}" autofocus>
+  <label for="expense_date">Date</label>
+  <input id="expense_date" name="expense_date" type="date" value="{{ v.date_text }}" required>
+  <label for="note">Note (e.g. delivery, labour)</label>
+  <textarea id="note" name="note" rows="2">{{ v.note_text }}</textarea>
+  {{ picker("trips", "trip_id", "Linked trip (optional)", v.trip_id, v.trip_label) }}
+  <button class="btn" type="submit">Save</button>
+  <a class="btn secondary" href="/expenses">Cancel</a>
+</form>
+<p class="muted">Link a trip only if the cost belongs to that truck. Clear the box to unlink.</p>
+{% endblock %}

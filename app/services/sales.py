@@ -82,6 +82,11 @@ def bills_for_day(day_id: int) -> list[dict]:
                                 [day_id]))
 
 
+def all_bills_with_totals() -> list[dict]:
+    """Every visible bill with its totals (used by Totals)."""
+    return _attach_totals(query(BILL_SELECT + " WHERE b.is_deleted = false ORDER BY b.id"))
+
+
 def bills_for_customer(customer_id: int, limit: int | None = 100) -> list[dict]:
     """A customer's bills, newest first. limit=None returns all of them."""
     sql = (BILL_SELECT + " WHERE b.customer_id = %s AND b.is_deleted = false "

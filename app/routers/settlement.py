@@ -6,6 +6,7 @@ from app.deps import form_data
 from app.db import query
 from app.services import calc, settlement
 from app.services.farm_money import costs_for_trip
+from app.services.reports import trip_profit
 from app.services.trips import get_trip
 from app.templating import templates
 from app.timeutil import dubai_today
@@ -29,6 +30,7 @@ def _page(request: Request, trip: dict, errors=None, status=200):
         "trip": trip, "rows": overview["rows"], "settled_amount": overview["settled_amount"],
         "costs": costs, "owner_costs": owner_costs, "my_costs": my_costs,
         "net": overview["settled_amount"] - owner_costs, "errors": errors or [],
+        "profit": trip_profit(trip["id"]),
         "today": dubai_today()}, status_code=status)
 
 

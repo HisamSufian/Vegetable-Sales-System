@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<h1>Profit</h1>
+{% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+
+<form method="get" action="/reports" class="card">
+  <div class="two-cols">
+    <div><label for="date_from">From</label><input id="date_from" name="date_from" type="date" value="{{ date_from }}"></div>
+    <div><label for="date_to">To</label><input id="date_to" name="date_to" type="date" value="{{ date_to }}"></div>
+  </div>
+  <button class="btn" type="submit">Show profit</button>
+  <div class="btn-row" style="margin-top: 10px">
+    <a class="btn small secondary" href="/reports?date_from={{ this_month[0] }}&date_to={{ this_month[1] }}">This month</a>
+    <a class="btn small secondary" href="/reports?date_from={{ last_month[0] }}&date_to={{ last_month[1] }}">Last month</a>
+  </div>
+</form>
+
+{% if unsettled.cartons %}
+<p class="warn-box">{{ unsettled.cartons }} cartons were sold but are not yet settled with the farm owners
+  ({{ unsettled.trips|length }} trip{{ "" if unsettled.trips|length == 1 else "s" }}).
+  Profit is too high until they are settled. <a href="/unsettled">See which trips</a></p>
+{% endif %}
+{% if pending %}
+<p class="warn-box">{{ pending }} sale line{{ "" if pending == 1 else "s" }} still have no rate and count as 0.
+  <a href="/rate-pending">Rate pending list</a></p>
+{% endif %}
+
+<div class="card">
+  <h2>{{ date_from }} to {{ date_to }}</h2>
+  <p class="big {{ 'balance-neg' if p.profit < 0 else 'balance-pos' }}">{{ p.profit|money }} AED</p>
+  <p class="muted">Profit</p>
+  <div class="totals">
+    <div><span>Sales (before discounts)</span><span>{{ p.sales|money }}</span></div>
+    <div><span>Discounts</span><span>- {{ p.discounts|money }}</span></div>
+    <div><span>Returns</span><span>- {{ p.returns|money }}</span></div>
+    <div class="grand"><span>Net sales</span><span>{{ p.net_sales|money }}</span></div>
+    <div><span>Write-offs (loss)</span><span>- {{ p.writeoffs|money }}</span></div>
+    <div><span>Farm owners (settled amounts)</span><span>- {{ p.settled|money }}</span></div>
+    <div><span>Extra costs I bear</span><span>- {{ p.costs_me|money }}</span></div>
+    <div><span>General expenses</span><span>- {{ p.expenses|money }}</span></div>
+    <div class="grand"><span>Profit</span><span>{{ p.profit|money }}</span></div>
+  </div>
+</div>
+<p class="muted">Sales and discounts count on the Day of the bill, returns on the return date, farm owner amounts
+on the settlement line date, and costs, expenses and write-offs on their own dates. The profit is exact once every
+sale has a rate and every sold carton is settled.</p>
+{% endblock %}

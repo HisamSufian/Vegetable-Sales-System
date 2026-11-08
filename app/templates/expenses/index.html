@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Expenses{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Expenses</h1>
+  <a class="btn small" href="/expenses/new">+ Add expense</a>
+</div>
+<form method="get" action="/expenses" class="card">
+  <div class="two-cols">
+    <div><label for="date_from">From</label><input id="date_from" name="date_from" type="date" value="{{ date_from }}"></div>
+    <div><label for="date_to">To</label><input id="date_to" name="date_to" type="date" value="{{ date_to }}"></div>
+  </div>
+  <button class="btn secondary" type="submit">Show</button>
+</form>
+<p><strong>Total: {{ total|money }} AED</strong> <span class="muted">({{ rows|length }} expense{{ "" if rows|length == 1 else "s" }})</span></p>
+{% for e in rows %}
+<div class="row line">
+  <span class="row-main">
+    <strong>{{ e.amount|money }} AED</strong>
+    <small>{{ e.expense_date|fdate }}{% if e.note %} | {{ e.note }}{% endif %}{% if e.trip_no %} | {{ e.trip_no }}{% endif %}</small>
+  </span>
+  <span class="actions">
+    <a class="btn small secondary" href="/expenses/{{ e.id }}/edit">Edit</a>
+    <form method="post" action="/expenses/{{ e.id }}/hide" class="mini-form" onsubmit="return confirm('Hide this expense?');">
+      <button class="btn small danger" type="submit">Hide</button>
+    </form>
+  </span>
+</div>
+{% else %}<p class="muted">No expenses in this period.</p>{% endfor %}
+<p class="muted">Costs you bear on a farm owner's behalf are added from the farm owner's profile and are counted in profit automatically.</p>
+{% endblock %}

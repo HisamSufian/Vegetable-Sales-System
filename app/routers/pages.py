@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 from app.auth import check_credentials, require_login
 from app.db import query
 from app.services.days import get_day_by_date
-from app.services.sales import pending_count
+from app.services.dashboard import dashboard
 from app.templating import templates
 from app.timeutil import dubai_today
 
@@ -45,7 +45,6 @@ def home(request: Request, email: str = Depends(require_login)):
         db_ok = False
     today = dubai_today()
     today_day = get_day_by_date(today) if db_ok else None
-    pending = pending_count() if db_ok else 0
+    data = dashboard(today, today_day) if db_ok else None
     return templates.TemplateResponse(request, "home.html", {
-        "email": email, "db_ok": db_ok, "today": today, "today_day": today_day,
-        "pending": pending})
+        "email": email, "db_ok": db_ok, "today": today, "today_day": today_day, "d": data})

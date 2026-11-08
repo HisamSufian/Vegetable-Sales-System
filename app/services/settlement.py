@@ -104,3 +104,31 @@ def update_line(line_id: int, v: dict) -> None:
 
 def hide_line(line_id: int) -> None:
     execute("UPDATE settlement_lines SET is_deleted = true WHERE id = %s", [line_id])
+
+
+SETTLED_BY_ROW = """(
+    SELECT sl.trip_row_id, SUM(sl.qty) AS qty
+    FROM settlement_lines sl WHERE sl.is_deleted = false
+    GROUP BY sl.trip_row_id
+)"""
+
+
+def unsettled_trips() -> list[dict]:
+    """Trips not marked settled that still have cartons sold but not in a settlement."""
+    rows = query(f"""
+        SELECT t.id, t.trip_no, f.name AS farm_owner_name, d.day_date,
+               SUM(GREATEST(COALESCE(sold.qty, 0) - COALESCE(st.qty, 0), 0)) AS unsettled
+        FROM trips t
+        JOIN days d ON d.id = t.day_id
+        JOIN farm_owners f ON f.id = t.farm_owner_id
+        JOIN trip_rows r ON r.trip_id = t.id AND r.is_deleted = false
+        LEFT JOIN {SOLD_BY_ROW} sold ON sold.trip_row_id = r.id
+        LEFT JOIN {SETTLED_BY_ROW} st ON st.trip_row_id = r.id
+        WHERE t.is_deleted = false AND t.status <> 'settled'
+        GROUP BY t.id, t.trip_no, f.name, d.day_date
+        HAVING SUM(GREATEST(COALESCE(sold.qty, 0) - COALESCE(st.qty, 0), 0)) > 0
+        ORDER BY d.day_date, t.id
+    """)
+    for r in rows:
+        r["unsettled"] = int(r["unsettled"])
+    return rows

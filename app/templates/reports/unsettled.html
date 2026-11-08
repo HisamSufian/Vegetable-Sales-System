@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Unsettled trips{% endblock %}
+{% block content %}
+<h1>Unsettled trips</h1>
+<p class="muted">Trips with cartons sold but not yet in a settlement. A trip leaves this list when everything
+sold is settled, or when you mark it settled.</p>
+{% for t in u.trips %}
+<a class="row" href="/trips/{{ t.id }}/settlement">
+  <span class="row-main"><strong>{{ t.trip_no }} | {{ t.farm_owner_name }}</strong>
+    <small>{{ t.day_date|fdate }}</small></span>
+  <span class="count">{{ t.unsettled }}</span>
+</a>
+{% else %}
+<p class="ok-box">Everything sold is settled.</p>
+{% endfor %}
+{% if u.trips %}<p><strong>{{ u.cartons }} cartons not yet settled.</strong></p>{% endif %}
+{% endblock %}

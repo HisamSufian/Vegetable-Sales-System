@@ -3,7 +3,8 @@
 <div class="card">
   <h1>Today: {{ today|fdate }}</h1>
   {% if today_day %}
-    <p>Status: <strong>{{ "Open" if today_day.status == "open" else "Closed" }}</strong></p>
+    <p>Status: <strong>{{ "Open" if today_day.status == "open" else "Closed" }}</strong> |
+       Sales today: <strong>{{ d.sales_today|money }} AED</strong></p>
     <a class="btn" href="/sales/day/{{ today_day.id }}">Continue today's Day</a>
   {% else %}
     <form method="post" action="/sales/start-day">
@@ -15,12 +16,60 @@
     {% if db_ok %}<span class="ok">Connected</span>{% else %}<span class="alert-text">Not connected</span>{% endif %}
   </p>
 </div>
+
+{% if db_ok %}
+<div class="stats">
+  <a class="stat" href="/stock"><span>Cartons left</span><strong>{{ d.cartons_left }}</strong>
+    <small>{% if d.negative_rows %}<span class="neg">{{ d.negative_rows }} row{{ "" if d.negative_rows == 1 else "s" }} below zero</span>{% else %}in stock{% endif %}</small></a>
+  <a class="stat" href="/rate-pending"><span>Rate pending</span><strong>{{ d.pending }}</strong><small>sale lines without a rate</small></a>
+  <a class="stat" href="/unsettled"><span>Unsettled trips</span><strong>{{ d.unsettled.trips|length }}</strong>
+    <small>{{ d.unsettled.cartons }} cartons not settled</small></a>
+  <a class="stat" href="/totals#cheques"><span>Cheques due soon</span>
+    <strong>{{ d.customer_due|length + d.issued_due|length }}</strong><small>next 7 days</small></a>
+</div>
+
+{% if d.customer_due %}
+<h2>Customer cheques due (next 7 days)</h2>
+<p class="muted">{{ d.customer_due|length }} cheque{{ "" if d.customer_due|length == 1 else "s" }} | {{ d.customer_due_total|money }} AED</p>
+{% for c in d.customer_due %}
+<a class="row" href="/profiles/customers/{{ c.party_id }}">
+  <span class="row-main"><strong>{{ c.party_name }} | {{ c.amount|money }} AED</strong>
+    <small>Cheque {{ c.cheque_no }} | due {{ c.due_date|fdate }}</small></span>
+  <span class="badge {{ 'pending' if not c.overdue }}">{% if c.overdue %}Overdue{% elif c.days_left == 0 %}Today{% else %}{{ c.days_left }} days{% endif %}</span>
+</a>
+{% endfor %}
+{% endif %}
+
+{% if d.issued_due %}
+<h2>Cheques I issued, due (next 7 days)</h2>
+<p class="muted">{{ d.issued_due|length }} cheque{{ "" if d.issued_due|length == 1 else "s" }} | {{ d.issued_due_total|money }} AED</p>
+{% for c in d.issued_due %}
+<a class="row" href="/profiles/farm-owners/{{ c.party_id }}">
+  <span class="row-main"><strong>{{ c.party_name }} | {{ c.amount|money }} AED</strong>
+    <small>Cheque {{ c.cheque_no }} | due {{ c.due_date|fdate }}</small></span>
+  <span class="badge {{ 'pending' if not c.overdue }}">{% if c.overdue %}Overdue{% elif c.days_left == 0 %}Today{% else %}{{ c.days_left }} days{% endif %}</span>
+</a>
+{% endfor %}
+{% endif %}
+
+{% if d.unsettled.trips %}
+<h2>Unsettled trips</h2>
+{% for t in d.unsettled.trips[:5] %}
+<a class="row" href="/trips/{{ t.id }}/settlement">
+  <span class="row-main"><strong>{{ t.trip_no }} | {{ t.farm_owner_name }}</strong><small>{{ t.day_date|fdate }}</small></span>
+  <span class="count">{{ t.unsettled }}</span>
+</a>
+{% endfor %}
+{% if d.unsettled.trips|length > 5 %}<p><a href="/unsettled">See all {{ d.unsettled.trips|length }} unsettled trips</a></p>{% endif %}
+{% endif %}
+{% endif %}
+
 <div class="grid">
   <a class="tile" href="/sales">Sales</a>
-  <a class="tile" href="/stock">Stock</a>
   <a class="tile" href="/profiles">Profiles</a>
-  <a class="tile" href="/settings">Settings</a>
+  <a class="tile" href="/totals">Total</a>
+  <a class="tile" href="/stock">Stock</a>
+  <a class="tile" href="/expenses">Expenses</a>
+  <a class="tile" href="/reports">Reports</a>
 </div>
-{% if pending %}<a class="row" href="/rate-pending"><span class="row-main"><strong>Rate pending</strong><small>{{ pending }} sale line{{ "" if pending == 1 else "s" }} without a rate</small></span><span class="badge pending">{{ pending }}</span></a>{% endif %}
-<p class="muted">Totals and Expenses will appear here in later phases.</p>
 {% endblock %}

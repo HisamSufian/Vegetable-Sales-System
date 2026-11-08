@@ -7,7 +7,8 @@
     {% if day.status == "open" %}<span class="badge open">Open</span>{% else %}<span class="badge">Closed</span>{% endif %}</h1>
   {% if existing %}<p class="ok-box">This Day already existed, so it was opened.</p>{% endif %}
   <p>{{ trips|length }} trip{{ "" if trips|length == 1 else "s" }} | {{ total }} cartons arrived<br>
-     {{ bills|length }} bill{{ "" if bills|length == 1 else "s" }} | Sales: <strong>{{ sales_total|money }} AED</strong></p>
+     {{ bills|length }} bill{{ "" if bills|length == 1 else "s" }} | Sales: <strong>{{ sales_total|money }} AED</strong><br>
+     <span class="muted">Estimated profit for this Day: <strong>{{ estimate.profit|money }} AED</strong> (an estimate only: farm owner rates may not be final)</span></p>
   <a class="btn" href="/sales/day/{{ day.id }}/trips/new">+ Add trip</a>
   <a class="btn" href="/sales/day/{{ day.id }}/sale">+ Add sale</a>
   <a class="btn secondary" href="/stock/move/new">Store stock</a>

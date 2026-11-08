@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Total{% endblock %}
+{% block content %}
+<h1>Total</h1>
+
+<div class="stats">
+  <div class="stat"><span>Payable</span><strong>{{ t.payable|money }}</strong><small>I owe farm owners</small></div>
+  <div class="stat"><span>Receivable</span><strong>{{ t.receivable|money }}</strong><small>Customers owe me</small></div>
+  <div class="stat"><span>Paid</span><strong>{{ t.paid|money }}</strong><small>I paid farm owners{{ " (date range)" if filtered }}</small></div>
+  <div class="stat"><span>Received</span><strong>{{ t.received|money }}</strong><small>Customers paid me{{ " (date range)" if filtered }}</small></div>
+</div>
+
+<form method="get" action="/totals" class="card">
+  <h2>Date range for Paid and Received</h2>
+  <p class="muted">Payable and Receivable are always as of now. Leave the dates empty for everything.</p>
+  <div class="two-cols">
+    <div><label for="date_from">From</label><input id="date_from" name="date_from" type="date" value="{{ date_from }}"></div>
+    <div><label for="date_to">To</label><input id="date_to" name="date_to" type="date" value="{{ date_to }}"></div>
+  </div>
+  <button class="btn secondary" type="submit">Apply</button>
+  {% if filtered %}<a class="btn secondary" href="/totals">Clear dates</a>{% endif %}
+</form>
+
+<h2 id="cheques">Cheques in hand</h2>
+<p class="muted">Customer cheques not yet cleared: <strong>{{ t.in_hand|length }}</strong> |
+  <strong>{{ t.in_hand_total|money }} AED</strong>. Not counted as received.</p>
+{% for c in t.in_hand %}
+<a class="row" href="/profiles/customers/{{ c.party_id }}">
+  <span class="row-main"><strong>{{ c.party_name }} | {{ c.amount|money }} AED</strong>
+    <small>Cheque {{ c.cheque_no }}{% if c.bank %} | {{ c.bank }}{% endif %} | due {{ c.due_date|fdate }}</small></span>
+  <span class="badge {{ 'pending' if not c.overdue }}">{% if c.overdue %}Overdue{% elif c.days_left == 0 %}Today{% else %}{{ c.days_left }} days{% endif %}</span>
+</a>
+{% else %}<p class="muted">None.</p>{% endfor %}
+
+<h2>Cheques I issued</h2>
+<p class="muted">My cheques to farm owners not yet cleared: <strong>{{ t.issued|length }}</strong> |
+  <strong>{{ t.issued_total|money }} AED</strong>. Not counted as paid.</p>
+{% for c in t.issued %}
+<a class="row" href="/profiles/farm-owners/{{ c.party_id }}">
+  <span class="row-main"><strong>{{ c.party_name }} | {{ c.amount|money }} AED</strong>
+    <small>Cheque {{ c.cheque_no }}{% if c.bank %} | {{ c.bank }}{% endif %} | due {{ c.due_date|fdate }}</small></span>
+  <span class="badge {{ 'pending' if not c.overdue }}">{% if c.overdue %}Overdue{% elif c.days_left == 0 %}Today{% else %}{{ c.days_left }} days{% endif %}</span>
+</a>
+{% else %}<p class="muted">None.</p>{% endfor %}
+
+<h2>Payable: farm owners I owe</h2>
+{% for o in t.payable_list %}
+<a class="row" href="/profiles/farm-owners/{{ o.id }}"><span class="row-main"><strong>{{ o.name }}</strong></span>
+  <span class="count">{{ o.balance|money }}</span></a>
+{% else %}<p class="muted">I owe no farm owner anything.</p>{% endfor %}
+{% if t.advances_list %}
+<h2>Advances: farm owners who owe me</h2>
+<p class="muted">Paid ahead: {{ t.advances|money }} AED in total (not subtracted from Payable).</p>
+{% for o in t.advances_list %}
+<a class="row" href="/profiles/farm-owners/{{ o.id }}"><span class="row-main"><strong>{{ o.name }}</strong></span>
+  <span class="count">{{ o.balance|money }}</span></a>
+{% endfor %}
+{% endif %}
+
+<h2>Receivable: customers who owe me</h2>
+{% for c in t.receivable_list %}
+<a class="row" href="/profiles/customers/{{ c.id }}"><span class="row-main"><strong>{{ c.name }}</strong></span>
+  <span class="count">{{ c.balance|money }}</span></a>
+{% else %}<p class="muted">No customer owes me anything.</p>{% endfor %}
+{% if t.credits_list %}
+<h2>Credits: customers I owe</h2>
+<p class="muted">Overpaid: {{ t.credits|money }} AED in total (not subtracted from Receivable).</p>
+{% for c in t.credits_list %}
+<a class="row" href="/profiles/customers/{{ c.id }}"><span class="row-main"><strong>{{ c.name }}</strong></span>
+  <span class="count">{{ c.balance|money }}</span></a>
+{% endfor %}
+{% endif %}
+{% endblock %}

@@ -104,3 +104,13 @@ select { width: 100%; min-height: 48px; padding: 10px 12px; font-size: 16px; bor
 .balance-neg { color: #b42318; }
 .mini-form { display: inline; margin: 0; }
 .mini-form .btn { margin: 0; }
+
+/* Phase 8 */
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+.stat { display: flex; flex-direction: column; padding: 14px; background: #fff; border-radius: 12px;
+        text-decoration: none; color: inherit; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.stat span { color: #667366; font-size: .9rem; font-weight: 600; }
+.stat strong { font-size: 1.5rem; color: #1f6b34; }
+.stat small { color: #667366; }
+.two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn.small + .btn.secondary { margin-left: 0; }

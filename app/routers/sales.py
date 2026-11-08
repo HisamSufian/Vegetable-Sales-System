@@ -6,6 +6,7 @@ from fastapi.responses import RedirectResponse
 from app.auth import require_login
 from app.deps import form_data
 from app.services.days import get_day, list_days, set_day_status, start_day
+from app.services.reports import profit_for_range
 from app.services.sales import bills_for_day, pending_count
 from app.services.stock import unstored_for_day
 from app.services.trips import trips_for_day
@@ -53,6 +54,7 @@ def day_page(request: Request, day_id: int, existing: str = ""):
     return templates.TemplateResponse(request, "sales/day.html", {
         "day": day, "trips": trips, "total": sum(t["total"] for t in trips),
         "bills": bills, "sales_total": sum(b["totals"]["total"] for b in bills),
+        "estimate": profit_for_range(day["day_date"], day["day_date"]),
         "existing": bool(existing), "flash": request.session.pop("flash", None)})
 
 

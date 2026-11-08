@@ -3,7 +3,7 @@ import unittest
 from decimal import Decimal
 
 from app.services.calc import (bill_totals, customer_balance, farm_balance, line_amount,
-                               parse_money, parse_signed_int, parse_signed_money)
+                               parse_money, parse_signed_int, parse_signed_money, profit)
 
 
 class LineAndBillTests(unittest.TestCase):
@@ -91,6 +91,25 @@ class CustomerBalanceTests(unittest.TestCase):
                          Decimal("245"))
         self.assertEqual(customer_balance(Decimal("345"), Decimal("0"), Decimal("300"), Decimal("0")),
                          Decimal("45"))   # after the 200 cheque clears
+
+
+class ProfitTests(unittest.TestCase):
+    def test_example_day(self):
+        # sales 1500, discount 50, returns 250, write-off 20, settled 900, my costs 30, expenses 40
+        result = profit(Decimal("1500"), Decimal("50"), Decimal("250"), Decimal("20"),
+                        Decimal("900"), Decimal("30"), Decimal("40"))
+        self.assertEqual(result["net_sales"], Decimal("1200"))
+        self.assertEqual(result["profit"], Decimal("210"))
+
+    def test_a_loss_is_negative(self):
+        result = profit(Decimal("100"), Decimal("0"), Decimal("0"), Decimal("0"),
+                        Decimal("150"), Decimal("0"), Decimal("0"))
+        self.assertEqual(result["profit"], Decimal("-50"))
+
+    def test_trip_profit_ignores_discounts_and_writeoffs(self):
+        result = profit(Decimal("1500"), Decimal("0"), Decimal("250"), Decimal("0"),
+                        Decimal("900"), Decimal("30"), Decimal("40"))
+        self.assertEqual(result["profit"], Decimal("280"))
 
 
 class SignedMoneyTests(unittest.TestCase):

@@ -83,6 +83,9 @@
   <div><span>Costs the farm owner bears</span><span>- {{ owner_costs|money }}</span></div>
   <div class="grand"><span>Net for this trip (AED)</span><span>{{ net|money }}</span></div>
   {% if my_costs %}<p class="muted">Costs I bear myself (not deducted): {{ my_costs|money }}</p>{% endif %}
+  <div><span>Trip profit (private)</span><span>{{ profit.profit|money }}</span></div>
+  <p class="muted">Trip profit = sales after returns - settled amounts - costs I bear - expenses linked to this trip.
+  It ignores bill discounts. It is for you only and never shown to the farm owner.</p>
   <p class="muted">Payments are made against the farm owner overall, on the farm owner's profile.</p>
 </div>
 {% endblock %}

@@ -87,3 +87,12 @@ def customer_balance(bills_total: Decimal, opening: Decimal, payments: Decimal, 
     """What a customer owes me (negative = I owe him, for example an overpayment):
     bills (after returns and discounts) + opening balance - payments (cleared) - write-offs."""
     return bills_total + opening - payments - writeoffs
+
+
+def profit(sales: Decimal, discounts: Decimal, returns: Decimal, writeoffs: Decimal,
+           settled: Decimal, costs_i_bear: Decimal, expenses: Decimal) -> dict:
+    """Profit = customer sales after discounts and returns
+                - write-offs (a loss) - farm owner settled amounts - extra costs I bear - general expenses."""
+    net_sales = sales - discounts - returns
+    return {"net_sales": net_sales,
+            "profit": net_sales - writeoffs - settled - costs_i_bear - expenses}

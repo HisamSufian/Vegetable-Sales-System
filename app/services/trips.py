@@ -144,6 +144,11 @@ def trip_blockers(trip_id: int) -> list[str]:
     if costs:
         problems.append(f"This trip has {costs} extra cost{'s' if costs != 1 else ''} linked to it. "
                         f"Hide or unlink those first.")
+    expenses = query("SELECT count(*) AS n FROM expenses WHERE trip_id = %s AND is_deleted = false",
+                     [trip_id])[0]["n"]
+    if expenses:
+        problems.append(f"This trip has {expenses} expense{'s' if expenses != 1 else ''} linked to it. "
+                        f"Hide or unlink those first.")
     return problems
 
 
