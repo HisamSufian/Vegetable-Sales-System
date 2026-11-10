@@ -96,3 +96,23 @@ def profit(sales: Decimal, discounts: Decimal, returns: Decimal, writeoffs: Deci
     net_sales = sales - discounts - returns
     return {"net_sales": net_sales,
             "profit": net_sales - writeoffs - settled - costs_i_bear - expenses}
+
+
+def running_balance(entries: list[dict], d_from, d_to) -> dict:
+    """Builds a statement's account summary.
+    entries: dicts with date, rank, id, text, plus, minus (balance = all plus - all minus).
+    Entries before d_from only make up the 'brought forward' balance, entries from d_from to
+    d_to become rows with a running balance, and later entries are ignored."""
+    balance = ZERO
+    brought_forward = ZERO
+    rows = []
+    for e in sorted(entries, key=lambda e: (e["date"], e["rank"], e["id"])):
+        if e["date"] < d_from:
+            balance += e["plus"] - e["minus"]
+            brought_forward = balance
+        elif e["date"] <= d_to:
+            balance += e["plus"] - e["minus"]
+            rows.append({**e, "balance": balance})
+        else:
+            break
+    return {"brought_forward": brought_forward, "rows": rows, "closing": balance}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Statement - {{ s.owner.label }}{% endblock %}
+{% block content %}
+<div class="no-print">
+  <p><a href="/profiles/farm-owners/{{ s.owner.id }}">&larr; {{ s.owner.label }}</a> | <a href="/statements">Statements</a></p>
+</div>
+{% include "statements/_controls.html" %}
+
+<div class="stmt">
+  {% include "statements/_head.html" %}
+  <h2 class="stmt-title">Statement for {{ s.owner.label }}</h2>
+  <p>Period: {{ d_from|fdate }} to {{ d_to|fdate }}<br>Statement date: {{ today|fdate }}</p>
+
+  <h3>Trips</h3>
+  {% for t in s.trips %}
+  <div class="stmt-block">
+    <h4>{{ t.trip_no }} | arrived {{ t.arrival_date|fdate }} | truck {{ t.plate_number }}</h4>
+    {% if t.lines %}
+    <div class="table-wrap"><table>
+      <tr><th>Vegetable</th><th class="num">Cartons</th><th class="num">Rate (AED)</th><th class="num">Amount (AED)</th></tr>
+      {% for l in t.lines %}
+      <tr><td>{{ l.vegetable_name }}</td><td class="num">{{ l.qty }}</td><td class="num">{{ l.rate|money }}</td><td class="num">{{ l.amount|money }}</td></tr>
+      {% endfor %}
+      <tr class="total"><td>Total</td><td class="num">{{ t.total_cartons }}</td><td></td><td class="num">{{ t.total_amount|money }}</td></tr>
+    </table></div>
+    {% else %}<p>Nothing settled for this trip in this period yet.</p>{% endif %}
+    {% for w in t.wasted %}
+    <p class="wasted">Wasted, not paid: {{ w.qty }} cartons of {{ w.vegetable_name }}</p>
+    {% endfor %}
+  </div>
+  {% else %}<p>No trips in this period.</p>{% endfor %}
+
+  <h3>Costs deducted</h3>
+  {% if s.costs %}
+  <div class="table-wrap"><table>
+    <tr><th>Date</th><th>Description</th><th class="num">Amount (AED)</th></tr>
+    {% for c in s.costs %}
+    <tr><td>{{ c.cost_date|fdate }}</td><td>{{ c.note or "Extra cost" }}{% if c.trip_no %} ({{ c.trip_no }}){% endif %}</td><td class="num">{{ c.amount|money }}</td></tr>
+    {% endfor %}
+    <tr class="total"><td colspan="2">Total deducted</td><td class="num">{{ s.costs_total|money }}</td></tr>
+  </table></div>
+  {% else %}<p>None in this period.</p>{% endif %}
+
+  <h3>Payments</h3>
+  {% if s.payments %}
+  <div class="table-wrap"><table>
+    <tr><th>Date</th><th>Paid by</th><th class="num">Amount (AED)</th></tr>
+    {% for p in s.payments %}
+    <tr><td>{{ p.pay_date|fdate }}</td><td>{{ p.text }}{% if p.note %} | {{ p.note }}{% endif %}</td><td class="num">{{ p.amount|money }}</td></tr>
+    {% endfor %}
+    <tr class="total"><td colspan="2">Total paid</td><td class="num">{{ s.payments_total|money }}</td></tr>
+  </table></div>
+  {% else %}<p>None in this period.</p>{% endif %}
+
+  {% if s.pending_cheques %}
+  <h3>Cheques issued, not yet cleared</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Cheque</th><th>Due date</th><th class="num">Amount (AED)</th></tr>
+    {% for c in s.pending_cheques %}
+    <tr><td>{{ c.cheque_no }}{% if c.bank %} | {{ c.bank }}{% endif %}</td><td>{{ c.due_date|fdate }}</td><td class="num">{{ c.amount|money }}</td></tr>
+    {% endfor %}
+  </table></div>
+  <p class="muted-print">These are not included in the balance below until they clear.</p>
+  {% endif %}
+
+  <h3>Account summary</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Date</th><th>Description</th><th class="num">Due to you</th><th class="num">Deducted / paid</th><th class="num">Balance</th></tr>
+    <tr class="total"><td colspan="4">Balance brought forward</td><td class="num">{{ s.ledger.brought_forward|money }}</td></tr>
+    {% for r in s.ledger.rows %}
+    <tr><td>{{ r.date|fdate }}</td><td>{{ r.text }}</td>
+        <td class="num">{{ r.plus|money if r.plus else "" }}</td>
+        <td class="num">{{ r.minus|money if r.minus else "" }}</td>
+        <td class="num">{{ r.balance|money }}</td></tr>
+    {% endfor %}
+    <tr class="total"><td colspan="4">Closing balance at {{ d_to|fdate }}</td><td class="num">{{ s.ledger.closing|money }}</td></tr>
+  </table></div>
+  <p><strong>{% if s.ledger.closing > 0 %}Balance due to you: {{ s.ledger.closing|money }} AED{% elif s.ledger.closing < 0 %}Advance paid to you, still to be recovered: {{ (0 - s.ledger.closing)|money }} AED{% else %}Nothing is due either way.{% endif %}</strong></p>
+
+  {% include "statements/_foot.html" %}
+</div>
+{% endblock %}

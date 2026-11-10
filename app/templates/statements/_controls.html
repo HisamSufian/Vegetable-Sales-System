@@ -1,0 +1,11 @@
+<div class="no-print">
+  {% for e in errors %}<p class="alert">{{ e }}</p>{% endfor %}
+  <form method="get" class="card">
+    <div class="two-cols">
+      <div><label for="date_from">From</label><input id="date_from" name="date_from" type="date" value="{{ d_from.isoformat() }}"></div>
+      <div><label for="date_to">To</label><input id="date_to" name="date_to" type="date" value="{{ d_to.isoformat() }}"></div>
+    </div>
+    <button class="btn secondary" type="submit">Update</button>
+  </form>
+  <button class="btn" type="button" onclick="window.print()">Print / Save as PDF</button>
+</div>

@@ -114,3 +114,29 @@ select { width: 100%; min-height: 48px; padding: 10px 12px; font-size: 16px; bor
 .stat small { color: #667366; }
 .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .btn.small + .btn.secondary { margin-left: 0; }
+
+/* Phase 9: statements */
+.stmt { background: #fff; border-radius: 12px; padding: 20px; margin-top: 14px; }
+.stmt-head h1 { margin: 0; }
+.stmt-head p { margin: 2px 0 0; }
+.stmt-title { margin-top: 16px; }
+.stmt h3 { margin: 22px 0 6px; border-bottom: 2px solid #1f6b34; padding-bottom: 4px; }
+.stmt h4 { margin: 14px 0 6px; }
+.table-wrap { overflow-x: auto; }
+.stmt table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.stmt th, .stmt td { padding: 6px 8px; border-bottom: 1px solid #e3e8e3; text-align: left; vertical-align: top; }
+.stmt th { background: #f1f5f1; }
+.stmt .num { text-align: right; white-space: nowrap; }
+.stmt tr.total td { font-weight: 700; background: #f7faf7; }
+.stmt .wasted { color: #8a5300; font-weight: 600; margin: 6px 0; }
+.stmt-foot { margin-top: 22px; padding-top: 10px; border-top: 1px solid #ccc; white-space: pre-wrap; }
+.muted-print { color: #667366; font-size: .9rem; }
+
+@media print {
+  .topbar, .nav, .no-print { display: none !important; }
+  body { background: #fff; }
+  .container { max-width: none; padding: 0; }
+  .stmt { box-shadow: none; padding: 0; margin: 0; border-radius: 0; }
+  a { color: inherit; text-decoration: none; }
+  .stmt-block, tr { page-break-inside: avoid; }
+}

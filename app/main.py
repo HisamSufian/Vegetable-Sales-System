@@ -10,7 +10,8 @@ from app.auth import NotLoggedIn
 from app.config import settings
 from app.db import pool
 from app.routers import (bills, customer_money, expenses, farm_money, health, pages, pickers, profiles,
-                         reports, returns, sales, settings_page, settlement, stock, totals, trips)
+                         reports, returns, sales, settings_page, settlement, statements, stock, totals,
+                         trips)
 
 BASE_DIR = Path(__file__).parent
 
@@ -56,5 +57,6 @@ app.include_router(customer_money.router)
 app.include_router(totals.router)
 app.include_router(expenses.router)
 app.include_router(reports.router)
+app.include_router(statements.router)
 app.include_router(stock.router)
 app.include_router(settings_page.router)

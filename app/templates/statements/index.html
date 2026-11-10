@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_picker.html" import picker %}
+{% block title %}Statements{% endblock %}
+{% block content %}
+<h1>Statements</h1>
+{% if error %}<p class="alert">{{ error }}</p>{% endif %}
+
+<form method="get" action="/statements/open" class="card">
+  <h2>Farm owner statement</h2>
+  <input type="hidden" name="kind" value="farm-owner">
+  {{ picker("farm-owners", "party_id", "Farm owner") }}
+  <div class="two-cols">
+    <div><label for="fo_from">From</label><input id="fo_from" name="date_from" type="date" value="{{ date_from }}"></div>
+    <div><label for="fo_to">To</label><input id="fo_to" name="date_to" type="date" value="{{ date_to }}"></div>
+  </div>
+  <button class="btn" type="submit">Open statement</button>
+</form>
+
+<form method="get" action="/statements/open" class="card">
+  <h2>Customer statement</h2>
+  <input type="hidden" name="kind" value="customer">
+  {{ picker("customers", "party_id", "Customer") }}
+  <div class="two-cols">
+    <div><label for="cu_from">From</label><input id="cu_from" name="date_from" type="date" value="{{ date_from }}"></div>
+    <div><label for="cu_to">To</label><input id="cu_to" name="date_to" type="date" value="{{ date_to }}"></div>
+  </div>
+  <button class="btn" type="submit">Open statement</button>
+</form>
+<p class="muted">The statement opens as a clean page. Use "Print / Save as PDF" on it, then share the PDF on WhatsApp.
+The farm owner statement never shows selling rates, customers or your profit.</p>
+{% endblock %}

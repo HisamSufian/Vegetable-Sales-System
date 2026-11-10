@@ -2,8 +2,11 @@
 import unittest
 from decimal import Decimal
 
+from datetime import date
+
 from app.services.calc import (bill_totals, customer_balance, farm_balance, line_amount,
-                               parse_money, parse_signed_int, parse_signed_money, profit)
+                               parse_money, parse_signed_int, parse_signed_money, profit,
+                               running_balance)
 
 
 class LineAndBillTests(unittest.TestCase):
@@ -110,6 +113,44 @@ class ProfitTests(unittest.TestCase):
         result = profit(Decimal("1500"), Decimal("0"), Decimal("250"), Decimal("0"),
                         Decimal("900"), Decimal("30"), Decimal("40"))
         self.assertEqual(result["profit"], Decimal("280"))
+
+
+def _e(when, rank, entry_id, plus="0", minus="0"):
+    return {"date": when, "rank": rank, "id": entry_id, "text": "x",
+            "plus": Decimal(plus), "minus": Decimal(minus)}
+
+
+class RunningBalanceTests(unittest.TestCase):
+    ENTRIES = [_e(date(2026, 1, 1), 1, 1, plus="360"),
+               _e(date(2026, 1, 5), 2, 1, minus="150"),
+               _e(date(2026, 2, 1), 3, 1, minus="100")]
+
+    def test_brought_forward_rows_and_closing(self):
+        result = running_balance(self.ENTRIES, date(2026, 1, 3), date(2026, 2, 28))
+        self.assertEqual(result["brought_forward"], Decimal("360"))
+        self.assertEqual([r["balance"] for r in result["rows"]], [Decimal("210"), Decimal("110")])
+        self.assertEqual(result["closing"], Decimal("110"))
+
+    def test_entries_after_the_period_are_left_out(self):
+        result = running_balance(self.ENTRIES, date(2026, 1, 1), date(2026, 1, 31))
+        self.assertEqual(result["brought_forward"], Decimal("0"))
+        self.assertEqual(len(result["rows"]), 2)
+        self.assertEqual(result["closing"], Decimal("210"))
+
+    def test_same_day_order_follows_rank(self):
+        day = date(2026, 3, 1)
+        result = running_balance([_e(day, 3, 1, minus="50"), _e(day, 0, 2, plus="100")], day, day)
+        self.assertEqual([r["balance"] for r in result["rows"]], [Decimal("100"), Decimal("50")])
+
+    def test_nothing_in_the_period(self):
+        result = running_balance([], date(2026, 1, 1), date(2026, 1, 31))
+        self.assertEqual((result["brought_forward"], result["closing"], result["rows"]),
+                         (Decimal("0"), Decimal("0"), []))
+
+    def test_matches_the_farm_balance_formula(self):
+        # settled 360, costs 150, payment 100 -> same answer as farm_balance
+        result = running_balance(self.ENTRIES, date(2026, 1, 1), date(2026, 12, 31))
+        self.assertEqual(result["closing"], farm_balance(Decimal("360"), Decimal("0"), Decimal("150"), Decimal("100")))
 
 
 class SignedMoneyTests(unittest.TestCase):

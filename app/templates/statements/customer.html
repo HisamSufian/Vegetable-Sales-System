@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Statement - {{ s.customer.label }}{% endblock %}
+{% block content %}
+<div class="no-print">
+  <p><a href="/profiles/customers/{{ s.customer.id }}">&larr; {{ s.customer.label }}</a> | <a href="/statements">Statements</a></p>
+  {% if s.pending_lines %}
+  <p class="warn-box">{{ s.pending_lines }} sale line{{ "" if s.pending_lines == 1 else "s" }} in this period still
+    {{ "has" if s.pending_lines == 1 else "have" }} no rate and {{ "counts" if s.pending_lines == 1 else "count" }} as 0.00.
+    Set the rates before you send this statement. <a href="/rate-pending">Rate pending list</a></p>
+  {% endif %}
+</div>
+{% include "statements/_controls.html" %}
+
+<div class="stmt">
+  {% include "statements/_head.html" %}
+  <h2 class="stmt-title">Statement for {{ s.customer.label }}</h2>
+  <p>Period: {{ d_from|fdate }} to {{ d_to|fdate }}<br>Statement date: {{ today|fdate }}</p>
+
+  <h3>Bills</h3>
+  {% for b in s.bills %}
+  <div class="stmt-block">
+    <h4>{{ b.bill_no }} | {{ b.day_date|fdate }}</h4>
+    <div class="table-wrap"><table>
+      <tr><th>Vegetable</th><th class="num">Cartons</th><th class="num">Rate (AED)</th><th class="num">Amount (AED)</th></tr>
+      {% for l in b.lines %}
+      <tr><td>{{ l.vegetable_name }}</td><td class="num">{{ l.qty }}</td>
+          <td class="num">{% if l.rate is none %}Pending{% else %}{{ l.rate|money }}{% endif %}</td>
+          <td class="num">{{ l.amount|money }}</td></tr>
+      {% endfor %}
+      {% if b.discount_amount %}
+      <tr><td colspan="3">Subtotal</td><td class="num">{{ b.subtotal|money }}</td></tr>
+      <tr><td colspan="3">Discount</td><td class="num">- {{ b.discount_amount|money }}</td></tr>
+      {% endif %}
+      <tr class="total"><td colspan="3">Bill total</td><td class="num">{{ b.net|money }}</td></tr>
+    </table></div>
+  </div>
+  {% else %}<p>No bills in this period.</p>{% endfor %}
+
+  {% if s.returns %}
+  <h3>Returns</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Date</th><th>Description</th><th class="num">Credit (AED)</th></tr>
+    {% for r in s.returns %}
+    <tr><td>{{ r.return_date|fdate }}</td><td>{{ r.qty }} {{ r.vegetable_name }} ({{ r.bill_no }}) at {{ r.credit_rate|money }}</td><td class="num">{{ r.amount|money }}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% endif %}
+
+  <h3>Payments</h3>
+  {% if s.payments %}
+  <div class="table-wrap"><table>
+    <tr><th>Date</th><th>Paid by</th><th class="num">Amount (AED)</th></tr>
+    {% for p in s.payments %}
+    <tr><td>{{ p.pay_date|fdate }}</td><td>{{ p.text }}</td><td class="num">{{ p.amount|money }}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p>None in this period.</p>{% endif %}
+
+  {% if s.cheques_in_hand %}
+  <h3>Cheques received, not yet cleared</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Cheque</th><th>Due date</th><th class="num">Amount (AED)</th></tr>
+    {% for c in s.cheques_in_hand %}
+    <tr><td>{{ c.cheque_no }}{% if c.bank %} | {{ c.bank }}{% endif %}</td><td>{{ c.due_date|fdate }}</td><td class="num">{{ c.amount|money }}</td></tr>
+    {% endfor %}
+  </table></div>
+  <p class="muted-print">These are not included in the balance below until they clear.</p>
+  {% endif %}
+
+  <h3>Account summary</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Date</th><th>Description</th><th class="num">Charges</th><th class="num">Paid / credited</th><th class="num">Balance</th></tr>
+    <tr class="total"><td colspan="4">Balance brought forward</td><td class="num">{{ s.ledger.brought_forward|money }}</td></tr>
+    {% for r in s.ledger.rows %}
+    <tr><td>{{ r.date|fdate }}</td><td>{{ r.text }}</td>
+        <td class="num">{{ r.plus|money if r.plus else "" }}</td>
+        <td class="num">{{ r.minus|money if r.minus else "" }}</td>
+        <td class="num">{{ r.balance|money }}</td></tr>
+    {% endfor %}
+    <tr class="total"><td colspan="4">Closing balance at {{ d_to|fdate }}</td><td class="num">{{ s.ledger.closing|money }}</td></tr>
+  </table></div>
+  <p><strong>{% if s.ledger.closing > 0 %}Balance owed: {{ s.ledger.closing|money }} AED{% elif s.ledger.closing < 0 %}Credit in your favour: {{ (0 - s.ledger.closing)|money }} AED{% else %}Nothing is owed.{% endif %}</strong></p>
+
+  {% include "statements/_foot.html" %}
+</div>
+{% endblock %}
