@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Help{% endblock %}
+{% block content %}
+<h1>Help</h1>
+<p class="muted">A short guide to your system. Everything here is also in the menu.</p>
+
+<div class="card help">
+  <h2>1. A normal day</h2>
+  <ol>
+    <li><strong>Start the Day:</strong> on Home tap "Start today's Day". (Any past date can be started from Sales.)</li>
+    <li><strong>A truck arrives:</strong> Day page, "+ Add trip". Choose the truck, farm owner and driver (type a new name and tap "+ Add" if needed). Then add each vegetable with its cartons. The same vegetable twice just adds to its row.</li>
+    <li><strong>Sell:</strong> "+ Add sale" and choose the customer, or "Walk-in / Cash sale". For each line pick the stock (it shows the vegetable, cartons left, farm owner, trip, date and vehicle), the cartons and the rate. Leave the rate empty if you don't know it yet.</li>
+    <li><strong>Store what is left:</strong> Stock, "Store / move", pick the cartons and the storage vehicle. Stored stock shows up automatically the next day.</li>
+    <li><strong>Close the Day.</strong> It warns about cartons still in their truck, but you can always close anyway.</li>
+  </ol>
+
+  <h2>2. Later</h2>
+  <ul>
+    <li><strong>Missing rates:</strong> Home shows "Rate pending". Open it and type each rate.</li>
+    <li><strong>A customer returns cartons:</strong> open the bill, tap "Return" on the line. If some are damaged, also record them under Stock, "Wastage".</li>
+    <li><strong>Settle with the farm owner:</strong> open the trip, "Settlement". Type the cartons and <em>your</em> rate (you can add several lines with different rates). You cannot settle more cartons than were sold after returns. Press "Mark settled" when the bill is final.</li>
+    <li><strong>Costs on a farm owner:</strong> his profile, "+ Extra cost". Choose who bears it: the farm owner (deducted from him) or you.</li>
+    <li><strong>Paying a farm owner:</strong> his profile, "+ Payment". For a cheque, enter its number and due date, and mark it Cleared when it clears.</li>
+    <li><strong>A customer pays:</strong> his profile, "+ Payment". It goes against his total balance. A post-dated cheque is "in hand" and only counts once you mark it Cleared. A bounced cheque goes back into his balance.</li>
+    <li><strong>A debt you will not collect:</strong> customer profile, "+ Write-off" (a reason is needed). It counts as a loss.</li>
+    <li><strong>Old debts from before the system:</strong> "+ Opening balance" on the profile.</li>
+  </ul>
+
+  <h2>3. Checking the money</h2>
+  <ul>
+    <li><strong>Total:</strong> Payable, Paid, Receivable, Received, and the cheque lists.</li>
+    <li><strong>Reports:</strong> profit for any dates. Read the yellow warnings: they tell you when cartons are not yet settled or rates are missing.</li>
+    <li><strong>Statements:</strong> pick a farm owner or customer and dates, then "Print / Save as PDF" and share the PDF on WhatsApp. A farm owner statement never shows selling rates, customers or your profit.</li>
+  </ul>
+
+  <h2>4. Every week</h2>
+  <ol>
+    <li><strong>Download a backup:</strong> Settings, "Download backup". Keep the zip somewhere safe, not only on your phone.</li>
+    <li>Clear "Rate pending" and look at "Unsettled trips" on Home.</li>
+    <li>Check the cheques due in the next 7 days.</li>
+    <li>Send statements to farm owners and customers.</li>
+  </ol>
+
+  <h2>5. Good to know</h2>
+  <ul>
+    <li>Everything can be edited, even on closed days. "Hide" is how you delete: nothing is lost, and hidden items can be restored.</li>
+    <li>If something is still used (a trip with sales, a farm owner with payments), Hide is blocked and tells you what to hide first.</li>
+    <li>Selling or moving more than the stock only <em>warns</em>. A negative stock number (red) usually means an arrival count was entered wrongly: fix it on the trip.</li>
+    <li>Walk-in / Cash sales count as received straight away, so that customer never has a balance.</li>
+    <li>All amounts are in AED, whole cartons only, Dubai time.</li>
+  </ul>
+
+  <h2>6. If something looks wrong</h2>
+  <ul>
+    <li><strong>A balance looks off:</strong> open the profile. The Balance card lists every part, and each part has its own list you can edit.</li>
+    <li><strong>The first page is slow:</strong> the free server wakes up after a quiet spell. Wait a minute and try again.</li>
+    <li><strong>An error page:</strong> note what you pressed and send it to your developer (with a screenshot).</li>
+    <li><strong>Install on your phone:</strong> open the site in Chrome, menu, "Install app" or "Add to Home screen".</li>
+  </ul>
+</div>
+{% endblock %}

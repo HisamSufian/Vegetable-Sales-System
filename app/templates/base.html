@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Sufi Vegetables{% endblock %}</title>
+  <meta name="theme-color" content="#1f6b34">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/css/app.css">
   <script src="/static/js/htmx.min.js" defer></script>
   <script src="/static/js/picker.js" defer></script>
@@ -31,5 +36,11 @@
   <main class="container">
     {% block content %}{% endblock %}
   </main>
+  <script>
+    // Lets the phone install the site as an app. The service worker never stores any data.
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js"); });
+    }
+  </script>
 </body>
 </html>

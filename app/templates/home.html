@@ -18,6 +18,9 @@
 </div>
 
 {% if db_ok %}
+{% if d.backup_overdue %}
+<a class="warn-box" style="display:block; text-decoration:none" href="/settings#backup">{% if d.backup_days is none %}No backup yet. Download one now.{% else %}Your last backup was {{ d.backup_days }} days ago. Download a new one.{% endif %}</a>
+{% endif %}
 <div class="stats">
   <a class="stat" href="/stock"><span>Cartons left</span><strong>{{ d.cartons_left }}</strong>
     <small>{% if d.negative_rows %}<span class="neg">{{ d.negative_rows }} row{{ "" if d.negative_rows == 1 else "s" }} below zero</span>{% else %}in stock{% endif %}</small></a>
@@ -72,5 +75,7 @@
   <a class="tile" href="/expenses">Expenses</a>
   <a class="tile" href="/reports">Reports</a>
   <a class="tile" href="/statements">Statements</a>
+  <a class="tile" href="/settings">Settings</a>
+  <a class="tile" href="/help">Help</a>
 </div>
 {% endblock %}

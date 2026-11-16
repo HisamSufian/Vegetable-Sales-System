@@ -48,3 +48,8 @@ def home(request: Request, email: str = Depends(require_login)):
     data = dashboard(today, today_day) if db_ok else None
     return templates.TemplateResponse(request, "home.html", {
         "email": email, "db_ok": db_ok, "today": today, "today_day": today_day, "d": data})
+
+
+@router.get("/help")
+def help_page(request: Request, email: str = Depends(require_login)):
+    return templates.TemplateResponse(request, "help.html", {})

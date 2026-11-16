@@ -2,10 +2,12 @@
 from datetime import date, timedelta
 
 from app.services import calc
+from app.services.business import get_business
 from app.services.reports import unsettled_summary
 from app.services.sales import bills_for_day, pending_count
 from app.services.stock import stock_overview
 from app.services.totals import customer_cheques_in_hand, issued_cheques
+from app.timeutil import DUBAI
 
 
 def dashboard(today: date, today_day: dict | None) -> dict:
@@ -13,6 +15,8 @@ def dashboard(today: date, today_day: dict | None) -> dict:
                    if today_day else calc.ZERO)
     stock = stock_overview()
     soon = today + timedelta(days=7)
+    last_backup = get_business().get("last_backup_at")
+    backup_days = (today - last_backup.astimezone(DUBAI).date()).days if last_backup else None
     customer_due = [c for c in customer_cheques_in_hand() if c["due_date"] <= soon]   # includes overdue
     issued_due = [c for c in issued_cheques() if c["due_date"] <= soon]
     return {
@@ -22,4 +26,5 @@ def dashboard(today: date, today_day: dict | None) -> dict:
         "customer_due": customer_due, "customer_due_total": sum((c["amount"] for c in customer_due), calc.ZERO),
         "issued_due": issued_due, "issued_due_total": sum((c["amount"] for c in issued_due), calc.ZERO),
         "unsettled": unsettled_summary(), "pending": pending_count(),
+        "backup_overdue": backup_days is None or backup_days >= 7, "backup_days": backup_days,
     }
