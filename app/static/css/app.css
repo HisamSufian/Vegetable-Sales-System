@@ -146,3 +146,18 @@ select { width: 100%; min-height: 48px; padding: 10px 12px; font-size: 16px; bor
 .help h2:first-child { margin-top: 0; }
 .help ol, .help ul { padding-left: 22px; }
 .help li { margin-bottom: 8px; }
+
+/* Menu: one slim bar that opens a panel of bordered boxes */
+.nav { display: block; padding: 8px 12px; }
+.menu summary { display: flex; justify-content: space-between; align-items: center; min-height: 48px;
+                padding: 10px 14px; font-weight: 700; font-size: 1.05rem; color: #1f6b34; background: #fff;
+                border: 2px solid #1f6b34; border-radius: 10px; cursor: pointer; list-style: none; }
+.menu summary::-webkit-details-marker { display: none; }
+.menu summary::after { content: "\25BE"; }
+.menu[open] summary::after { content: "\25B4"; }
+.menu-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 4px; }
+.menu-list a { display: flex; align-items: center; justify-content: center; min-height: 52px; padding: 8px;
+               background: #fff; color: #1f6b34; border: 2px solid #1f6b34; border-radius: 10px;
+               font-weight: 700; text-align: center; text-decoration: none; }
+.menu-list a.active { background: #1f6b34; color: #fff; }
+.card > p:last-child { margin-bottom: 0; }

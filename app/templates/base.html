@@ -21,16 +21,18 @@
     {% endif %}
   </header>
   {% if request.session.get("email") %}
+  {% set menu_links = [("/", "Home"), ("/sales", "Sales"), ("/stock", "Stock"), ("/totals", "Total"),
+                       ("/expenses", "Expenses"), ("/reports", "Reports"), ("/statements", "Statements"),
+                       ("/profiles", "Profiles"), ("/settings", "Settings"), ("/help", "Help")] %}
   <nav class="nav">
-    <a href="/">Home</a>
-    <a href="/sales">Sales</a>
-    <a href="/stock">Stock</a>
-    <a href="/totals">Total</a>
-    <a href="/expenses">Expenses</a>
-    <a href="/reports">Reports</a>
-    <a href="/statements">Statements</a>
-    <a href="/profiles">Profiles</a>
-    <a href="/settings">Settings</a>
+    <details class="menu">
+      <summary>Menu</summary>
+      <div class="menu-list">
+        {% for href, label in menu_links %}
+        <a href="{{ href }}" class="{{ 'active' if (href == '/' and request.url.path == '/') or (href != '/' and request.url.path.startswith(href)) }}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </details>
   </nav>
   {% endif %}
   <main class="container">
